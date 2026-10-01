@@ -8,14 +8,26 @@ generator client {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 0: minimal foundation schema.
+// MarketSphere core data model.
 //
-// Only the USER entity (plus its enums) from docs/Architecture Diagrams/
-// ER-Diagram.md is defined here so the database connection and migration
-// pipeline can be verified before business logic is built.
+// Source: docs/Architecture Diagrams/ER-Diagram.md (authoritative for the
+// relational design) with enum vocabulary from UML-Class-Diagram.md.
 //
-// Phase 1+ will add: BusinessProfile, Product, ProductVariant, ProductImage,
-// OrderRequest, OrderItem, OrderStatusHistory, Notification, Report.
+// Conventions:
+// - UUID primary keys, snake_case table/column names via @@map/@map.
+// - createdAt/updatedAt timestamps on every model.
+// - Money uses Decimal(12, 2). Positivity of quantities/prices and order
+//   status transitions are enforced in the backend (BR-07, BR-10, BR-11);
+//   Prisma/PostgreSQL DDL generated here carries the FK/unique structure.
+// - Order requests are never hard-deleted (CANCELLED is a terminal state),
+//   so child rows of a request cascade while cross-aggregate references
+//   use Restrict to preserve order history (BR-08, BR-10).
+//
+// Deliberate deviation from the ER diagram:
+// - PRODUCT.category (free-text string in the ER diagram) is modelled as a
+//   Category entity with an optional self-referencing hierarchy, per the
+//   Phase 1 entity list and the Research.md data model. Product.categoryId
+//   is nullable so DRAFT listings can exist before categorisation.
 // ---------------------------------------------------------------------------
 
 enum UserRole {
@@ -31,6 +43,55 @@ enum AccountStatus {
   SUSPENDED
 }
 
+enum BusinessType {
+  MANUFACTURER
+  WHOLESALER
+  RETAILER
+  DISTRIBUTOR
+  RESELLER
+  INSTITUTIONAL
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  REJECTED
+  INACTIVE
+}
+
+enum RequestStatus {
+  PENDING_SELLER
+  SELLER_PROPOSED
+  AWAITING_BUYER
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum NotificationType {
+  ORDER_REQUEST
+  ORDER_RESPONSE
+  ORDER_UPDATE
+  ACCOUNT_UPDATE
+  SYSTEM
+}
+
+enum ReportStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
 model User {
   id           String        @id @default(uuid()) @db.Uuid
   name         String
@@ -42,5 +103,212 @@ model User {
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
+  businessProfile BusinessProfile?
+  products        Product[]            @relation("SellerProducts")
+  buyerRequests   OrderRequest[]       @relation("BuyerRequests")
+  sellerRequests  OrderRequest[]       @relation("SellerRequests")
+  statusChanges   OrderStatusHistory[] @relation("StatusChangedBy")
+  notifications   Notification[]
+  reportsFiled    Report[]             @relation("ReportsFiled")
+  reportsAgainst  Report[]             @relation("ReportsAgainst")
+
   @@map("users")
+}
+
+model BusinessProfile {
+  id                 String             @id @default(uuid()) @db.Uuid
+  // One user owns at most one business profile (unique FK enforces 1:1).
+  userId             String             @unique @map("user_id") @db.Uuid
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName       String             @map("business_name")
+  businessType       BusinessType       @map("business_type")
+  description        String?
+  address            String?
+  city               String?
+  state              String?
+  pincode            String?
+  verificationStatus VerificationStatus @default(NOT_SUBMITTED) @map("verification_status")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  @@index([city])
+  @@map("business_profiles")
+}
+
+model Category {
+  id        String     @id @default(uuid()) @db.Uuid
+  name      String     @unique
+  slug      String     @unique
+  parentId  String?    @map("parent_id") @db.Uuid
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children  Category[] @relation("CategoryHierarchy")
+  products  Product[]
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  @@map("categories")
+}
+
+model Product {
+  id                   String        @id @default(uuid()) @db.Uuid
+  sellerId             String        @map("seller_id") @db.Uuid
+  // Application layer must verify the seller has role SELLER and an
+  // active account (ER diagram §4). Restrict preserves order history.
+  seller               User          @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Restrict)
+  categoryId           String?       @map("category_id") @db.Uuid
+  category             Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  name                 String
+  description          String?
+  // Indicative price only (BR-06): final terms are recorded on the
+  // accepted order request, never taken from here. Null = "contact seller".
+  indicativePrice      Decimal?      @map("indicative_price") @db.Decimal(12, 2)
+  // Null = no minimum enforced; quantities validated against it when set (BR-07).
+  minimumOrderQuantity Int?          @map("minimum_order_quantity")
+  status               ProductStatus @default(DRAFT)
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  variants   ProductVariant[]
+  images     ProductImage[]
+  orderItems OrderItem[]
+  reports    Report[]
+
+  @@index([sellerId])
+  @@index([status])
+  @@index([categoryId])
+  @@index([status, createdAt])
+  @@map("products")
+}
+
+model ProductVariant {
+  id          String  @id @default(uuid()) @db.Uuid
+  productId   String  @map("product_id") @db.Uuid
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Flexible name/value pair (size, colour, fabric, …) so one model covers
+  // all home-textile product types without per-type tables.
+  name        String
+  value       String
+  sku         String?
+  isAvailable Boolean @default(true) @map("is_available")
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id           String   @id @default(uuid()) @db.Uuid
+  productId    String   @map("product_id") @db.Uuid
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Storage key/URL only; binary files live in object storage, never in Postgres.
+  imageUrl     String   @map("image_url")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+model OrderRequest {
+  id              String        @id @default(uuid()) @db.Uuid
+  buyerId         String        @map("buyer_id") @db.Uuid
+  buyer           User          @relation("BuyerRequests", fields: [buyerId], references: [id], onDelete: Restrict)
+  // Exactly one seller per request (ER §6); multi-seller baskets are split
+  // into separate requests by the application layer.
+  sellerId        String        @map("seller_id") @db.Uuid
+  seller          User          @relation("SellerRequests", fields: [sellerId], references: [id], onDelete: Restrict)
+  // Denormalised current status for efficient querying; every transition is
+  // also appended to OrderStatusHistory (ER §6).
+  status          RequestStatus @default(PENDING_SELLER)
+  deliveryAddress String?       @map("delivery_address")
+  buyerNotes      String?       @map("buyer_notes")
+  // Backend-calculated from validated item quantities/prices (BR-11);
+  // never trusted from client input. Null until terms exist.
+  proposedTotal   Decimal?      @map("proposed_total") @db.Decimal(12, 2)
+  agreedTotal     Decimal?      @map("agreed_total") @db.Decimal(12, 2)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([sellerId, status])
+  @@index([buyerId, status])
+  @@map("order_requests")
+}
+
+model OrderItem {
+  id                  String       @id @default(uuid()) @db.Uuid
+  orderRequestId      String       @map("order_request_id") @db.Uuid
+  orderRequest        OrderRequest @relation(fields: [orderRequestId], references: [id], onDelete: Cascade)
+  productId           String       @map("product_id") @db.Uuid
+  product             Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  // Snapshots frozen at request/acceptance time so later product edits
+  // never silently rewrite history (BR-08).
+  productNameSnapshot String       @map("product_name_snapshot")
+  variantSnapshot     String?      @map("variant_snapshot")
+  quantity            Int
+  requestedUnitPrice  Decimal?     @map("requested_unit_price") @db.Decimal(12, 2)
+  agreedUnitPrice     Decimal?     @map("agreed_unit_price") @db.Decimal(12, 2)
+
+  @@index([orderRequestId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id             String         @id @default(uuid()) @db.Uuid
+  orderRequestId String         @map("order_request_id") @db.Uuid
+  orderRequest   OrderRequest   @relation(fields: [orderRequestId], references: [id], onDelete: Cascade)
+  previousStatus RequestStatus? @map("previous_status")
+  newStatus      RequestStatus  @map("new_status")
+  changedById    String         @map("changed_by") @db.Uuid
+  changedBy      User           @relation("StatusChangedBy", fields: [changedById], references: [id], onDelete: Restrict)
+  note           String?
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  @@index([orderRequestId])
+  @@index([orderRequestId, createdAt])
+  @@map("order_status_history")
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model Report {
+  id             String       @id @default(uuid()) @db.Uuid
+  reporterId     String       @map("reporter_id") @db.Uuid
+  reporter       User         @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Restrict)
+  // Nullable: a report may concern a user, a product, or general misconduct.
+  reportedUserId String?      @map("reported_user_id") @db.Uuid
+  reportedUser   User?        @relation("ReportsAgainst", fields: [reportedUserId], references: [id], onDelete: Restrict)
+  productId      String?      @map("product_id") @db.Uuid
+  // SetNull keeps the admin audit trail even if the listing is removed.
+  product        Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  reason         String
+  status         ReportStatus @default(OPEN)
+  // Filled by the admin when the report is resolved/dismissed.
+  resolution     String?
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([productId])
+  @@index([status])
+  @@map("reports")
 }
