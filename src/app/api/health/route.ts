@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { fail, ok } from "@/lib/api-response";
 
 /**
  * Next.js health-check endpoint (mirrors the Express `/api/health`).
- * Proves the Next.js stack can reach PostgreSQL via Prisma.
+ * Uses the same response envelope so both stacks speak one shape.
  */
 export async function GET() {
   let database: "connected" | "disconnected" = "disconnected";
@@ -14,13 +15,13 @@ export async function GET() {
     database = "disconnected";
   }
 
-  const healthy = database === "connected";
+  if (database === "connected") {
+    return NextResponse.json(ok({ status: "ok", database, timestamp: new Date().toISOString() }), {
+      status: 200,
+    });
+  }
   return NextResponse.json(
-    {
-      status: healthy ? "ok" : "degraded",
-      database,
-      timestamp: new Date().toISOString(),
-    },
-    { status: healthy ? 200 : 503 }
+    fail("DATABASE_UNAVAILABLE", "The app cannot reach the database.", { database }),
+    { status: 503 }
   );
 }

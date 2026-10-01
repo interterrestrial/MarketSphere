@@ -44,6 +44,9 @@ export const env = {
   /** Port for the standalone Express API server. */
   PORT: optionalInt("PORT", 3001),
 
+  /** Logger verbosity: debug < info < warn < error. */
+  LOG_LEVEL: optional("LOG_LEVEL", "info"),
+
   /**
    * Secret used for authentication (sessions/tokens).
    * Required from Phase 1 (auth) onwards; Phase 0 boots without it
