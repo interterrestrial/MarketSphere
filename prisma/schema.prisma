@@ -6,3 +6,41 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
+// ---------------------------------------------------------------------------
+// Phase 0: minimal foundation schema.
+//
+// Only the USER entity (plus its enums) from docs/Architecture Diagrams/
+// ER-Diagram.md is defined here so the database connection and migration
+// pipeline can be verified before business logic is built.
+//
+// Phase 1+ will add: BusinessProfile, Product, ProductVariant, ProductImage,
+// OrderRequest, OrderItem, OrderStatusHistory, Notification, Report.
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  SUSPENDED
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String
+  email        String        @unique
+  phone        String?
+  passwordHash String        @map("password_hash")
+  role         UserRole
+  status       AccountStatus @default(PENDING)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@map("users")
+}
