@@ -174,6 +174,11 @@ model Product {
   indicativePrice      Decimal?      @map("indicative_price") @db.Decimal(12, 2)
   // Null = no minimum enforced; quantities validated against it when set (BR-07).
   minimumOrderQuantity Int?          @map("minimum_order_quantity")
+  // FR-19 seller-maintained availability. This is seller-provided information,
+  // not a stock guarantee (BR-09): sellers must still confirm availability
+  // when accepting an order request.
+  isAvailable          Boolean       @default(true) @map("is_available")
+  availabilityNote     String?       @map("availability_note")
   status               ProductStatus @default(DRAFT)
   createdAt            DateTime      @default(now()) @map("created_at")
   updatedAt            DateTime      @updatedAt @map("updated_at")
@@ -187,6 +192,8 @@ model Product {
   @@index([status])
   @@index([categoryId])
   @@index([status, createdAt])
+  // Buyer discovery always filters on status + availability together.
+  @@index([status, isAvailable])
   @@map("products")
 }
 
