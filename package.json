@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "admin:create": "ts-node --compilerOptions '{\"module\":\"commonjs\"}' scripts/create-admin.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",

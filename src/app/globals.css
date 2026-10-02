@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design.md token layer. Components use Tailwind utilities (bg-background,
+ * bg-surface, …) that read these variables — never raw hex in components.
+ */
+:root {
+  color-scheme: dark;
+
+  --color-bg: #1b1c1e;
+  --color-surface: #333333;
+  --color-text-muted: #9598a0;
+  --color-border: #242528;
+  --color-primary: #67a6ea;
+
+  --color-text: #f3f4f6;
+  --color-text-secondary: #c5c7cc;
+  --color-success: #4fb477;
+  --color-warning: #e7b45b;
+  --color-danger: #e36b6b;
+  --color-info: #67a6ea;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
