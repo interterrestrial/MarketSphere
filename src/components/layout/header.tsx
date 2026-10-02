@@ -24,12 +24,19 @@ export function Header() {
                 Overview
               </Link>
               {user.role === "ADMIN" ? null : (
-                <Link
-                  href={user.role === "SELLER" ? "/seller/profile" : "/buyer/profile"}
-                  className="text-secondary hover:text-primary"
-                >
-                  Business profile
-                </Link>
+                <>
+                  <Link
+                    href={user.role === "SELLER" ? "/seller/profile" : "/buyer/profile"}
+                    className="text-secondary hover:text-primary"
+                  >
+                    Business profile
+                  </Link>
+                  {user.role === "SELLER" ? (
+                    <Link href="/seller/products" className="text-secondary hover:text-primary">
+                      Products
+                    </Link>
+                  ) : null}
+                </>
               )}
               <span className="text-muted" aria-label={`Signed in as ${user.name}`}>
                 {user.name}

@@ -47,6 +47,7 @@ export interface ProductDetailDto {
   id: string;
   name: string;
   description: string | null;
+  categoryId: string | null;
   indicativePrice: string | null;
   minimumOrderQuantity: number | null;
   isAvailable: boolean;
@@ -64,6 +65,8 @@ export interface ProductDetailDto {
 export interface SellerProductDto {
   id: string;
   name: string;
+  description: string | null;
+  categoryId: string | null;
   status: ProductStatus;
   indicativePrice: string | null;
   minimumOrderQuantity: number | null;

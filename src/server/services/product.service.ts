@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { db } from "../../lib/db";
 import type { AuthUser } from "../../types/auth";
-import type { SellerProductDto } from "../../types/product";
+import type { ProductDetailDto, SellerProductDto } from "../../types/product";
 import { AppError, NotFoundError } from "../middleware/error-handler";
 import type { CreateProductInput, ProductSort, UpdateProductInput } from "../validators/product";
 
@@ -266,10 +266,73 @@ export async function removeVariant(
   return ownedProductDto(user, productId);
 }
 
+/**
+ * Full product detail for the owning seller — any status, all variants, and
+ * all images, so the edit screen can show real values.
+ */
+export async function getSellerProduct(
+  user: AuthUser,
+  productId: string
+): Promise<ProductDetailDto> {
+  await ownedProduct(user, productId);
+  const product = await db.product.findUnique({
+    where: { id: productId },
+    include: {
+      category: true,
+      images: { orderBy: { displayOrder: "asc" } },
+      variants: { orderBy: [{ name: "asc" }, { value: "asc" }] },
+      seller: { include: { businessProfile: true } },
+    },
+  });
+  if (!product) {
+    throw new NotFoundError("Product");
+  }
+  const profile = product.seller.businessProfile;
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    categoryId: product.categoryId,
+    indicativePrice: product.indicativePrice?.toString() ?? null,
+    minimumOrderQuantity: product.minimumOrderQuantity,
+    isAvailable: product.isAvailable,
+    availabilityNote: product.availabilityNote,
+    status: product.status,
+    createdAt: product.createdAt.toISOString(),
+    updatedAt: product.updatedAt.toISOString(),
+    category: product.category
+      ? { id: product.category.id, name: product.category.name, slug: product.category.slug }
+      : null,
+    images: product.images.map((image) => ({
+      id: image.id,
+      imageUrl: image.imageUrl,
+      displayOrder: image.displayOrder,
+    })),
+    variants: product.variants.map((variant) => ({
+      id: variant.id,
+      name: variant.name,
+      value: variant.value,
+      sku: variant.sku,
+      isAvailable: variant.isAvailable,
+    })),
+    seller: profile
+      ? {
+          userId: product.seller.id,
+          businessName: profile.businessName,
+          city: profile.city,
+          state: profile.state,
+          verificationStatus: profile.verificationStatus,
+        }
+      : null,
+  };
+}
+
 function toSellerProductDto(
   product: {
     id: string;
     name: string;
+    description: string | null;
+    categoryId: string | null;
     status: SellerProductDto["status"];
     indicativePrice: { toString(): string } | null;
     minimumOrderQuantity: number | null;
@@ -286,6 +349,8 @@ function toSellerProductDto(
   return {
     id: product.id,
     name: product.name,
+    description: product.description,
+    categoryId: product.categoryId,
     status: product.status,
     indicativePrice: product.indicativePrice?.toString() ?? null,
     minimumOrderQuantity: product.minimumOrderQuantity,
