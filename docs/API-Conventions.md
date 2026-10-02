@@ -106,3 +106,30 @@ Failure (`4xx`/`5xx`):
   writable (administrator decision, FR-09).
 - The public view omits `contactPhone`, `gstNumber`, street `address`, and
   `pincode` until PRD §14.2 settles contact visibility.
+
+## 8. Product catalog (Phase 4)
+
+- Discovery (any signed-in account): `GET /api/v1/products` with `q`,
+  `category` (id or slug), `minPrice`, `maxPrice`, `sellerCity`,
+  `availability` (`any|available|unavailable`), `sort`
+  (`newest|name_asc|name_desc|price_asc|price_desc`), `page`, `pageSize`.
+- `GET /api/v1/products/categories` — filter options with visible-product counts.
+- `GET /api/v1/products/:id` — detail with MOQ, indicative price, images,
+  available variants, and the seller's public business summary.
+- Seller-only (`SELLER` + `ACTIVE` account): `POST /api/v1/products`,
+  `PATCH|DELETE /:id`, `POST /:id/publish`, `POST /:id/archive`,
+  `GET /products/mine`, plus `POST|DELETE` image and variant sub-resources.
+- Next.js mirrors the same surface under `/api/products/**`.
+- Ownership: every mutation loads the product scoped to the caller's
+  `sellerId` and answers 404 otherwise, so ids cannot be probed.
+- Lifecycle: new listings are `DRAFT`; publishing requires an active account
+  **and** a business profile. `DELETE` only removes drafts — published
+  listings must be archived (`409 ARCHIVE_REQUIRED`) so order history keeps
+  its references (BR-08).
+- Visibility (BR-02/BR-03): buyers only ever see `ACTIVE` products whose
+  seller is `ACTIVE` and has a business profile.
+- Availability is seller-provided information (`isAvailable` +
+  `availabilityNote`), never a stock guarantee (BR-09); it is re-checked when
+  an order request is submitted in the next phase.
+- Prices are stored as `numeric(12,2)` and always surfaced as *indicative*
+  until a seller accepts a request (BR-06).

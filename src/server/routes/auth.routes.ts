@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { ok } from "../../lib/api-response";
-import { SESSION_COOKIE, sessionCookieOptions, signSession } from "../../lib/session";
+import { SESSION_COOKIE, expressSessionCookieOptions, signSession } from "../../lib/session";
 import { authenticate } from "../middleware/require-auth";
 import { asyncHandler } from "../middleware/error-handler";
 import { authRateLimit } from "../middleware/rate-limit";
@@ -11,7 +11,7 @@ import { loginSchema, registerSchema } from "../validators/auth";
 export const authRouter = Router();
 
 function setSessionCookie(res: Response, token: string): void {
-  res.cookie(SESSION_COOKIE, token, sessionCookieOptions());
+  res.cookie(SESSION_COOKIE, token, expressSessionCookieOptions());
 }
 
 /**
@@ -46,7 +46,7 @@ authRouter.post(
 
 /** POST /api/v1/auth/logout — clears the session cookie. */
 authRouter.post("/logout", (_req: Request, res: Response) => {
-  const options = sessionCookieOptions();
+  const options = expressSessionCookieOptions();
   res.clearCookie(SESSION_COOKIE, {
     httpOnly: options.httpOnly,
     sameSite: options.sameSite,

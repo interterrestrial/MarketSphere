@@ -36,6 +36,9 @@ export function Header() {
                       Products
                     </Link>
                   ) : null}
+                  <Link href="/products" className="text-secondary hover:text-primary">
+                    Explore
+                  </Link>
                 </>
               )}
               <span className="text-muted" aria-label={`Signed in as ${user.name}`}>

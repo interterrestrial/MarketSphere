@@ -51,7 +51,10 @@ export interface SessionCookieOptions {
   maxAge: number;
 }
 
-/** Cookie attributes both transports must use (prevents session fixation gaps). */
+/**
+ * Cookie attributes both transports must use (prevents session fixation gaps).
+ * `maxAge` is in **seconds**, matching the Next.js `cookies()` API.
+ */
 export function sessionCookieOptions(): SessionCookieOptions {
   return {
     httpOnly: true,
@@ -60,4 +63,13 @@ export function sessionCookieOptions(): SessionCookieOptions {
     path: "/",
     maxAge: SESSION_MAX_AGE_SECONDS,
   };
+}
+
+/**
+ * Same attributes for Express `res.cookie`, whose `maxAge` is in
+ * **milliseconds** — passing seconds here would silently shorten sessions
+ * (604800ms ≈ 10 minutes instead of 7 days).
+ */
+export function expressSessionCookieOptions(): SessionCookieOptions {
+  return { ...sessionCookieOptions(), maxAge: SESSION_MAX_AGE_SECONDS * 1000 };
 }
