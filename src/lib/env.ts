@@ -48,19 +48,11 @@ export const env = {
   LOG_LEVEL: optional("LOG_LEVEL", "info"),
 
   /**
-   * Secret used for authentication (sessions/tokens).
-   * Required from Phase 1 (auth) onwards; Phase 0 boots without it
-   * but warns so local setup is ready in advance.
+   * Secret used to sign session JWTs. Required: the server refuses to boot
+   * without it so sessions can never fall back to an insecure default.
    */
-  AUTH_SECRET: process.env["AUTH_SECRET"] ?? "",
+  AUTH_SECRET: required("AUTH_SECRET"),
 
   /** Node environment. */
   NODE_ENV: optional("NODE_ENV", "development"),
 } as const;
-
-if (!env.AUTH_SECRET && env.NODE_ENV !== "test") {
-  console.warn(
-    "[env] AUTH_SECRET is not set. Authentication (Phase 1+) will require it. " +
-      "Set it in .env — see .env.example."
-  );
-}
