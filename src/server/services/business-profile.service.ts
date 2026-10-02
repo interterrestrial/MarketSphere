@@ -1,6 +1,11 @@
 import type { BusinessProfile, BusinessType, VerificationStatus } from "@prisma/client";
 import { db } from "../../lib/db";
 import type { AuthUser } from "../../types/auth";
+import type {
+  BusinessProfileDto,
+  OnboardingStatusDto,
+  ProfilePayload,
+} from "../../types/business-profile";
 import { AppError, NotFoundError } from "../middleware/error-handler";
 import type {
   CreateProfileInput,
@@ -181,4 +186,17 @@ export async function getPublicProfile(ownerId: string): Promise<PublicBusinessP
     verificationStatus: profile.verificationStatus,
     createdAt: profile.createdAt,
   };
+}
+
+/** Serialises a profile for client components (ISO dates, no Prisma types). */
+export function toProfilePayload(result: ProfileWithOnboarding | null): ProfilePayload {
+  if (!result) return { profile: null, onboarding: null };
+  const { profile, onboarding } = result;
+  const dto: BusinessProfileDto = {
+    ...profile,
+    createdAt: profile.createdAt.toISOString(),
+    updatedAt: profile.updatedAt.toISOString(),
+  };
+  const status: OnboardingStatusDto = { ...onboarding };
+  return { profile: dto, onboarding: status };
 }

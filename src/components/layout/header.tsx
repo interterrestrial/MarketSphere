@@ -23,9 +23,20 @@ export function Header() {
               <Link href={roleHome(user.role)} className="text-secondary hover:text-primary">
                 Overview
               </Link>
+              {user.role === "ADMIN" ? null : (
+                <Link
+                  href={user.role === "SELLER" ? "/seller/profile" : "/buyer/profile"}
+                  className="text-secondary hover:text-primary"
+                >
+                  Business profile
+                </Link>
+              )}
               <span className="text-muted" aria-label={`Signed in as ${user.name}`}>
                 {user.name}
               </span>
+              {user.status === "PENDING" ? (
+                <span className="text-warning">Awaiting approval</span>
+              ) : null}
               <button
                 type="button"
                 onClick={() => void logout().then(() => (window.location.href = "/"))}
