@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { authRouter } from "./auth.routes";
 
 /**
  * Versioned API router (Task 3: route registration).
@@ -10,3 +11,5 @@ import { Router } from "express";
  *   v1Router.use("/products", productsRouter);
  */
 export const v1Router = Router();
+
+v1Router.use("/auth", authRouter);

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
+import { zodFieldDetails } from "../../lib/validation";
 import { ValidationError } from "./error-handler";
 
 /**
@@ -32,22 +33,11 @@ export function validate(schemas: Schemas) {
       }
       next();
     } catch (error) {
-      next(toValidationError(error));
+      if (error instanceof ValidationError) {
+        next(error);
+        return;
+      }
+      next(new ValidationError("The request contains invalid fields.", zodFieldDetails(error)));
     }
   };
-}
-
-function toValidationError(error: unknown): ValidationError {
-  if (typeof error === "object" && error !== null && "issues" in error) {
-    const issues = (error as { issues: Array<{ path: Array<string | number>; message: string }> })
-      .issues;
-    return new ValidationError(
-      "The request contains invalid fields.",
-      issues.map((issue) => ({
-        path: issue.path.join("."),
-        message: issue.message,
-      }))
-    );
-  }
-  return new ValidationError("The request contains invalid fields.");
 }

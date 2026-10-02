@@ -37,6 +37,7 @@ Failure (`4xx`/`5xx`):
 | 403 | Forbidden | Wrong role for the action (later phases) |
 | 404 | Not found | Unknown endpoint or record (`NOT_FOUND`) |
 | 409 | Conflict | Unique-constraint violations (`CONFLICT`, Prisma P2002) |
+| 429 | Too many requests | Rate-limited auth attempts (`RATE_LIMITED`) |
 | 503 | Unavailable | Health probe when the database is unreachable |
 | 500 | Server error | Anything unexpected (`INTERNAL_ERROR`, no internals leaked) |
 
@@ -65,3 +66,20 @@ Failure (`4xx`/`5xx`):
 - One line per request: `METHOD path -> STATUS durationMs` (`requestLogger`).
 - Levels via `LOG_LEVEL` (`debug|info|warn|error`, default `info`).
 - `4xx` log at warn, `5xx` at error with stack; request bodies are never logged.
+
+## 6. Authentication (Phase 2)
+
+- One service layer (`src/server/services/auth.service.ts`), two thin
+  transports sharing logic, validation, and the envelope:
+  - Express (API clients): `POST /api/v1/auth/register|login|logout`, `GET /api/v1/auth/me`.
+  - Next.js (browser, same-origin cookies): `POST /api/auth/register|login|logout`, `GET /api/auth/me`.
+- Sessions are HS256 JWTs in the `ms_session` httpOnly cookie
+  (`SameSite=lax`, `Secure` in production, 7-day expiry). The token carries
+  only `{ sub, role }`; account status is re-read from the database on every
+  authenticated request, so suspending a user takes effect immediately.
+- Registration is buyer/seller only (admins are created out-of-band):
+  buyers start `ACTIVE`, sellers start `PENDING` until admin approval (FR-09).
+- Auth error codes: `INVALID_CREDENTIALS` (401), `UNAUTHENTICATED` (401),
+  `ACCOUNT_PENDING` / `ACCOUNT_INACTIVE` (403), `ROLE_FORBIDDEN` (403).
+- Login/register are rate-limited (20 attempts / 10 min per client) and
+  passwords require ≥8 chars with a letter and a number (bcrypt cost 12).
