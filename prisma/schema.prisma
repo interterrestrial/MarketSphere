@@ -127,11 +127,21 @@ model BusinessProfile {
   city               String?
   state              String?
   pincode            String?
+  // Phase 3 onboarding fields. Contact details are kept on the business
+  // profile (separate from the account's login contact) and are never part
+  // of the public seller view — see businessProfile.service.ts.
+  contactName        String?            @map("contact_name")
+  contactPhone       String?            @map("contact_phone")
+  gstNumber          String?            @unique @map("gst_number")
+  // Seller-only: regions/cities the business supplies (PRD FR-07, FR-11).
+  serviceArea        String?            @map("service_area")
   verificationStatus VerificationStatus @default(NOT_SUBMITTED) @map("verification_status")
   createdAt          DateTime           @default(now()) @map("created_at")
   updatedAt          DateTime           @updatedAt @map("updated_at")
 
   @@index([city])
+  // Admin verification queue lookup (FR-42) in a later phase.
+  @@index([verificationStatus])
   @@map("business_profiles")
 }
 
