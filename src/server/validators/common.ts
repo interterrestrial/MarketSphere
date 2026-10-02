@@ -19,3 +19,8 @@ export const uuidParams = z.object({
 });
 
 export type UuidParams = z.infer<typeof uuidParams>;
+
+/** Same as `uuidParams` for routes whose id param is named differently. */
+export function uuidParam(name: string) {
+  return z.object({ [name]: z.uuid() });
+}

@@ -32,7 +32,9 @@ function readSessionCookie(req: Request): string | null {
 /**
  * Authentication middleware — the backend enforcement point.
  * Verifies the session JWT, reloads the user from the database, and refuses
- * non-ACTIVE accounts. Handlers after this middleware can trust `req.user`.
+ * rejected or suspended accounts. Handlers after this middleware can trust
+ * `req.user`. PENDING sellers pass through so they can finish onboarding;
+ * pair with `requireActiveAccount` on business operations (BR-02).
  */
 export const authenticate = asyncHandler(
   async (req: Request, _res: Response, next: NextFunction) => {
@@ -52,6 +54,29 @@ export const authenticate = asyncHandler(
     next();
   }
 );
+
+/**
+ * Requires an ACTIVE account. Used on marketplace operations (publishing
+ * products, submitting order requests) so accounts still awaiting approval
+ * can only work on their own onboarding.
+ */
+export function requireActiveAccount(req: Request, _res: Response, next: NextFunction): void {
+  if (!req.user) {
+    next(new AppError(401, "UNAUTHENTICATED", "Sign in to access this resource."));
+    return;
+  }
+  if (req.user.status !== "ACTIVE") {
+    next(
+      new AppError(
+        403,
+        "ACCOUNT_PENDING",
+        "Your account is awaiting approval. You can finish your business profile in the meantime."
+      )
+    );
+    return;
+  }
+  next();
+}
 
 /**
  * Role-based authorization. Must always run after `authenticate`:

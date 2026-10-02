@@ -58,11 +58,10 @@ export async function authenticateUser(input: LoginInput): Promise<AuthUser> {
     case "ACTIVE":
       return toPublicUser(user);
     case "PENDING":
-      throw new AppError(
-        403,
-        "ACCOUNT_PENDING",
-        "Your account is awaiting approval. You will be notified once it is reviewed."
-      );
+      // Sellers sign in while their account is still under review so they can
+      // complete onboarding (Phase 3). Everything except onboarding stays
+      // closed via `requireActiveAccount`; BR-02 keeps publishing blocked.
+      return toPublicUser(user);
     default:
       throw new AppError(
         403,
@@ -74,11 +73,12 @@ export async function authenticateUser(input: LoginInput): Promise<AuthUser> {
 
 /**
  * Loads the session owner for authenticated requests. Returns null when the
- * account is gone or not ACTIVE, so every API call re-validates status —
- * suspending a user takes effect immediately (no token revocation needed).
+ * account is gone, rejected, or suspended — every API call re-reads status,
+ * so suspension takes effect immediately (no token revocation needed).
+ * PENDING sellers are returned; business routes gate them separately.
  */
 export async function getActiveSessionUser(id: string): Promise<AuthUser | null> {
   const user = await db.user.findUnique({ where: { id } });
-  if (!user || user.status !== "ACTIVE") return null;
+  if (!user || user.status === "REJECTED" || user.status === "SUSPENDED") return null;
   return toPublicUser(user);
 }

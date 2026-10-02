@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authRouter } from "./auth.routes";
+import { businessProfileRouter } from "./business-profile.routes";
 
 /**
  * Versioned API router (Task 3: route registration).
@@ -13,3 +14,4 @@ import { authRouter } from "./auth.routes";
 export const v1Router = Router();
 
 v1Router.use("/auth", authRouter);
+v1Router.use("/business-profile", businessProfileRouter);

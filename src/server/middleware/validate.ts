@@ -20,24 +20,36 @@ interface Schemas {
 }
 
 export function validate(schemas: Schemas) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
-    try {
-      if (schemas.body) {
-        req.body = schemas.body.parse(req.body);
-      }
-      if (schemas.query) {
-        req.query = schemas.query.parse(req.query) as Request["query"];
-      }
-      if (schemas.params) {
-        req.params = schemas.params.parse(req.params) as Request["params"];
-      }
-      next();
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        next(error);
-        return;
-      }
-      next(new ValidationError("The request contains invalid fields.", zodFieldDetails(error)));
-    }
+  return (req: Request, res: Response, next: NextFunction): void => {
+    runValidation(req, schemas);
+    next();
   };
+}
+
+/**
+ * Same as `validate`, but resolves the schemas per request — required when
+ * the rules depend on the signed-in user (e.g. role-scoped business types).
+ */
+export function validateDynamic(resolve: (req: Request) => Schemas) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    runValidation(req, resolve(req));
+    next();
+  };
+}
+
+function runValidation(req: Request, schemas: Schemas): void {
+  try {
+    if (schemas.body) {
+      req.body = schemas.body.parse(req.body);
+    }
+    if (schemas.query) {
+      req.query = schemas.query.parse(req.query) as Request["query"];
+    }
+    if (schemas.params) {
+      req.params = schemas.params.parse(req.params) as Request["params"];
+    }
+  } catch (error) {
+    if (error instanceof ValidationError) throw error;
+    throw new ValidationError("The request contains invalid fields.", zodFieldDetails(error));
+  }
 }

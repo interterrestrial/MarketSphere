@@ -83,3 +83,26 @@ Failure (`4xx`/`5xx`):
   `ACCOUNT_PENDING` / `ACCOUNT_INACTIVE` (403), `ROLE_FORBIDDEN` (403).
 - Login/register are rate-limited (20 attempts / 10 min per client) and
   passwords require ≥8 chars with a letter and a number (bcrypt cost 12).
+- Seller accounts start `PENDING` but **may still sign in** so they can finish
+  onboarding (Phase 3). `rejected`/`suspended` accounts are refused with
+  `ACCOUNT_INACTIVE`. Business operations add `requireActiveAccount`, so a
+  pending seller can only work on their own profile (BR-02).
+
+## 7. Business profiles (Phase 3)
+
+- `GET /api/v1/business-profile` — own profile + derived onboarding status
+  (`{ completed, percent, missingFields }`), 404 when not created yet.
+- `POST /api/v1/business-profile` — creates the account's single profile;
+  409 `PROFILE_EXISTS` on a second attempt (1:1 `user_id`).
+- `PATCH /api/v1/business-profile` — partial update of own profile.
+- `GET /api/v1/business-profile/public/:userId` — business-facing seller view.
+- Next.js mirrors these as `GET|POST|PATCH /api/business-profile`.
+- `businessType` is role-scoped: sellers `MANUFACTURER|WHOLESALER`, buyers
+  `RETAILER|DISTRIBUTOR|RESELLER|INSTITUTIONAL`; a mismatch is a 400.
+- Onboarding completion is derived from real data — sellers additionally need
+  `description` + `serviceArea`, buyers need a delivery location.
+- Ownership: writes are always scoped to the session user's `userId`, so no
+  account can edit another profile. `verificationStatus` is never client
+  writable (administrator decision, FR-09).
+- The public view omits `contactPhone`, `gstNumber`, street `address`, and
+  `pincode` until PRD §14.2 settles contact visibility.
