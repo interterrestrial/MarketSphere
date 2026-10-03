@@ -99,13 +99,12 @@ export function ProductDetail({ product, user }: { product: ProductDetailDto; us
                 order is accepted.
               </p>
               <div className="mt-4">
-                <Button disabled title="Order requests open in the next phase">
-                  Request order
-                </Button>
+                <Link href={`/buyer/request/new?product=${product.id}`}>
+                  <Button disabled={!product.isAvailable}>
+                    {product.isAvailable ? "Request order" : "Currently unavailable"}
+                  </Button>
+                </Link>
               </div>
-              <p className="mt-2 text-xs text-muted">
-                Request submission arrives with the order-request workflow.
-              </p>
             </div>
           ) : null}
 

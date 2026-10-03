@@ -36,6 +36,12 @@ export function Header() {
                       Products
                     </Link>
                   ) : null}
+                  <Link
+                    href={user.role === "SELLER" ? "/seller/requests" : "/buyer/requests"}
+                    className="text-secondary hover:text-primary"
+                  >
+                    Order requests
+                  </Link>
                   <Link href="/products" className="text-secondary hover:text-primary">
                     Explore
                   </Link>
