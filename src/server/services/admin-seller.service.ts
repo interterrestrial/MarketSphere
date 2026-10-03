@@ -40,9 +40,12 @@ export interface AdminSellerRow {
   } | null;
 }
 
-type SellerRow = Prisma.UserGetPayload<{
-  include: { businessProfile: { include: { _count: { select: { products: true } } } } };
-}>;
+const SELLER_INCLUDE = {
+  businessProfile: true,
+  _count: { select: { products: true } },
+} satisfies Prisma.UserInclude;
+
+type SellerRow = Prisma.UserGetPayload<{ include: typeof SELLER_INCLUDE }>;
 
 function toRow(user: SellerRow): AdminSellerRow {
   const profile = user.businessProfile;
@@ -70,7 +73,7 @@ function toRow(user: SellerRow): AdminSellerRow {
           verificationStatus: profile.verificationStatus,
           reviewNote: profile.reviewNote,
           reviewedAt: profile.reviewedAt?.toISOString() ?? null,
-          productCount: profile._count.products,
+          productCount: user._count.products,
         }
       : null,
   };
@@ -95,7 +98,7 @@ export async function listSellersForReview(options: {
       orderBy: { createdAt: "asc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { businessProfile: { include: { _count: { select: { products: true } } } } },
+      include: SELLER_INCLUDE,
     }),
     db.user.count({ where }),
   ]);
@@ -106,7 +109,7 @@ export async function listSellersForReview(options: {
 async function loadSeller(sellerId: string): Promise<SellerRow> {
   const seller = await db.user.findFirst({
     where: { id: sellerId, role: "SELLER" },
-    include: { businessProfile: { include: { _count: { select: { products: true } } } } },
+    include: SELLER_INCLUDE,
   });
   if (!seller) throw new NotFoundError("Seller");
   return seller;
@@ -144,14 +147,13 @@ export async function decideSellerVerification(
       reviewedAt: new Date(),
       reviewedById: admin.id,
     },
-    include: { _count: { select: { products: true } } },
   });
 
   // Approval also activates the account so the seller can publish (BR-02).
   const user = await db.user.update({
     where: { id: sellerId },
     data: { status: approved ? "ACTIVE" : "REJECTED" },
-    include: { businessProfile: { include: { _count: { select: { products: true } } } } },
+    include: SELLER_INCLUDE,
   });
 
   await recordAudit({
@@ -195,7 +197,7 @@ export async function setSellerAccountStatus(
   const user = await db.user.update({
     where: { id: sellerId },
     data: { status: suspending ? "SUSPENDED" : "ACTIVE" },
-    include: { businessProfile: { include: { _count: { select: { products: true } } } } },
+    include: SELLER_INCLUDE,
   });
 
   // A suspended seller's live listings leave buyer search immediately (BR-03).
