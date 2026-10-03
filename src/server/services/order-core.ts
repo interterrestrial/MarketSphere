@@ -62,9 +62,11 @@ export function computeTotal(
   );
 }
 
-export function itemDto(row: RequestRow["items"][number]): OrderItemDto {
-  const proposedQuantity = row.proposedQuantity;
-  const proposedUnitPrice = row.proposedUnitPrice?.toString() ?? null;
+export function itemDto(row: RequestRow["items"][number], hideProposal = false): OrderItemDto {
+  // A drafted proposal stays private to the seller until it is sent to the
+  // buyer, so nothing here can be mistaken for agreed terms.
+  const proposedQuantity = hideProposal ? null : row.proposedQuantity;
+  const proposedUnitPrice = hideProposal ? null : (row.proposedUnitPrice?.toString() ?? null);
   return {
     id: row.id,
     productId: row.productId,
@@ -81,10 +83,15 @@ export function itemDto(row: RequestRow["items"][number]): OrderItemDto {
   };
 }
 
-export function toDto(row: RequestRow): OrderRequestDto {
-  const proposalEntry = [...row.statusHistory]
-    .reverse()
-    .find((entry) => entry.newStatus === "SELLER_PROPOSED" || entry.newStatus === "AWAITING_BUYER");
+export function toDto(row: RequestRow, viewer?: AuthUser): OrderRequestDto {
+  const hideProposal = viewer?.role === "BUYER" && row.status === "SELLER_PROPOSED";
+  const proposalEntry = hideProposal
+    ? undefined
+    : [...row.statusHistory]
+        .reverse()
+        .find(
+          (entry) => entry.newStatus === "SELLER_PROPOSED" || entry.newStatus === "AWAITING_BUYER"
+        );
   return {
     id: row.id,
     reference: row.reference,
@@ -93,11 +100,11 @@ export function toDto(row: RequestRow): OrderRequestDto {
     confirmed: isConfirmed(row.status),
     deliveryAddress: row.deliveryAddress,
     buyerNotes: row.buyerNotes,
-    proposedTotal: row.proposedTotal?.toString() ?? null,
+    proposedTotal: hideProposal ? null : (row.proposedTotal?.toString() ?? null),
     agreedTotal: row.agreedTotal?.toString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-    items: row.items.map(itemDto),
+    items: row.items.map((item) => itemDto(item, hideProposal)),
     buyer: {
       id: row.buyer.id,
       name: row.buyer.name,
@@ -179,5 +186,5 @@ export async function applyTransition(
     });
   });
 
-  return toDto(updated);
+  return toDto(updated, user);
 }

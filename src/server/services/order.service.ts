@@ -173,7 +173,7 @@ export async function submitOrderRequest(
 }
 
 export async function getOrderRequest(user: AuthUser, requestId: string): Promise<OrderRequestDto> {
-  return toDto(await loadForParty(user, requestId));
+  return toDto(await loadForParty(user, requestId), user);
 }
 
 function toSummary(row: RequestRow, viewer: AuthUser): OrderSummaryDto {
