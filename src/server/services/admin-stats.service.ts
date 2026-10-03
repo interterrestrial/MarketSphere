@@ -75,6 +75,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
   ]);
 
   const orderStatusCounts = toCounts(ordersByStatus, "status");
+  const productStatusCounts = toCounts(productsByStatus, "status");
 
   return {
     users: {
@@ -94,7 +95,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     },
     products: {
       total: productTotal,
-      byStatus: toCounts(productsByStatus, "status"),
+      byStatus: productStatusCounts,
       awaitingReview: productStatusCounts["PENDING_REVIEW"] ?? 0,
     },
     orders: {
