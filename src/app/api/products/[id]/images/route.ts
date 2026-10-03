@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { addProductImage } from "@/server/services/product.service";
 import { productImageSchema } from "@/server/validators/product";
 import {
-  requireActiveSeller,
+  requireSeller,
   sessionUser,
   success,
   toErrorResponse,
@@ -17,7 +17,7 @@ export async function POST(
 ): Promise<NextResponse> {
   try {
     const user = await sessionUser();
-    const denied = requireActiveSeller(user);
+    const denied = requireSeller(user);
     if (denied) return denied;
     const { id } = await context.params;
     const parsed = productImageSchema.safeParse(await request.json());

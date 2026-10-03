@@ -4,7 +4,7 @@ import { createProduct } from "@/server/services/product.service";
 import { searchProducts } from "@/server/services/product-search.service";
 import { createProductSchema, productSearchQuerySchema } from "@/server/validators/product";
 import {
-  requireActiveSeller,
+  requireSeller,
   sessionUser,
   success,
   toErrorResponse,
@@ -31,7 +31,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     const user = await sessionUser();
-    const denied = requireActiveSeller(user);
+    const denied = requireSeller(user);
     if (denied) return denied;
     const parsed = createProductSchema.safeParse(await request.json());
     if (!parsed.success) return validationError(zodFieldDetails(parsed.error));

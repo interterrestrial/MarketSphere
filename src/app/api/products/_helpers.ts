@@ -38,16 +38,26 @@ export function validationError(details: unknown): NextResponse {
   return jsonError("VALIDATION_ERROR", "The request contains invalid fields.", 400, details);
 }
 
-/** Seller-only endpoints: role must be SELLER with an ACTIVE account. */
-export function requireActiveSeller(user: AuthUser | null): NextResponse | null {
+/** Seller-only endpoints: any SELLER account may manage its own drafts. */
+export function requireSeller(user: AuthUser | null): NextResponse | null {
   if (!user) return unauthorized();
   if (user.role !== "SELLER") {
     return jsonError("ROLE_FORBIDDEN", "Only seller accounts manage products.", 403);
   }
-  if (user.status !== "ACTIVE") {
+  return null;
+}
+
+/**
+ * Submitting a listing for publication additionally requires an ACTIVE
+ * account (BR-02) — pending sellers may prepare drafts but not publish.
+ */
+export function requireActiveSeller(user: AuthUser | null): NextResponse | null {
+  const denied = requireSeller(user);
+  if (denied) return denied;
+  if (user!.status !== "ACTIVE") {
     return jsonError(
       "ACCOUNT_PENDING",
-      "Your account is awaiting approval. You can prepare listings but not publish them yet.",
+      "Your account is awaiting approval. You can prepare listings but not submit them for review yet.",
       403
     );
   }

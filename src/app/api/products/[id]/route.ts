@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { deleteProduct } from "@/server/services/product.service";
-import {
-  requireActiveSeller,
-  sessionUser,
-  success,
-  toErrorResponse,
-} from "@/app/api/products/_helpers";
+import { requireSeller, sessionUser, success, toErrorResponse } from "@/app/api/products/_helpers";
 
 /** DELETE /api/products/[id] — deletes drafts only; published ones must be archived. */
 export async function DELETE(
@@ -14,7 +9,7 @@ export async function DELETE(
 ): Promise<NextResponse> {
   try {
     const user = await sessionUser();
-    const denied = requireActiveSeller(user);
+    const denied = requireSeller(user);
     if (denied) return denied;
     const { id } = await context.params;
     await deleteProduct(user!, id);

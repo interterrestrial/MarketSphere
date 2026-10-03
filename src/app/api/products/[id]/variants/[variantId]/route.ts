@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { removeVariant, updateVariant } from "@/server/services/product.service";
 import { updateVariantSchema } from "@/server/validators/product";
 import {
-  requireActiveSeller,
+  requireSeller,
   sessionUser,
   success,
   toErrorResponse,
@@ -17,7 +17,7 @@ export async function PATCH(
 ): Promise<NextResponse> {
   try {
     const user = await sessionUser();
-    const denied = requireActiveSeller(user);
+    const denied = requireSeller(user);
     if (denied) return denied;
     const { id, variantId } = await context.params;
     const parsed = updateVariantSchema.safeParse(await request.json());
@@ -35,7 +35,7 @@ export async function DELETE(
 ): Promise<NextResponse> {
   try {
     const user = await sessionUser();
-    const denied = requireActiveSeller(user);
+    const denied = requireSeller(user);
     if (denied) return denied;
     const { id, variantId } = await context.params;
     return success(await removeVariant(user!, id, variantId));

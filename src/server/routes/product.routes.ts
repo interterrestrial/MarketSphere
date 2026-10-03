@@ -34,10 +34,12 @@ import { paginationQuery, uuidParam } from "../validators/common";
 export const productRouter = Router();
 
 /**
- * Seller catalogue (own listings only). `requireActiveAccount` keeps
- * accounts awaiting approval in the "prepare a draft" state (BR-02).
+ * Seller catalogue (own listings only). Accounts awaiting approval may still
+ * prepare drafts — BR-02 only requires an approved account to publish, which
+ * is enforced by `requireActiveAccount` on the publish route below.
  */
-const sellerOnly = [authenticate, requireRole("SELLER"), requireActiveAccount];
+const sellerOnly = [authenticate, requireRole("SELLER")];
+const sellerApproved = [authenticate, requireRole("SELLER"), requireActiveAccount];
 
 // --------------------------------------------------------------------------
 // Discovery — readable by any signed-in account, including sellers.
@@ -108,10 +110,10 @@ productRouter.patch(
   })
 );
 
-/** POST /api/v1/products/:id/publish — publish a draft or reactivate. */
+/** POST /api/v1/products/:id/publish — submit a listing for review. */
 productRouter.post(
   "/:id/publish",
-  ...sellerOnly,
+  ...sellerApproved,
   validate({ params: uuidParam("id") }),
   asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params as { id: string };

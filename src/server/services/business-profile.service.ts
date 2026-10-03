@@ -128,8 +128,28 @@ export async function createProfile(
       contactPhone: input.contactPhone,
       gstNumber: input.gstNumber,
       serviceArea: input.serviceArea,
+      // A completed seller profile enters the administrator review queue
+      // (FR-08). Buyers are not verified in the MVP, so they stay as they are.
+      ...(user.role === "SELLER" ? { verificationStatus: "PENDING" as const } : {}),
     },
   });
+
+  // Tell the administrators a seller is waiting, so the queue is not a
+  // silent place to look.
+  if (user.role === "SELLER") {
+    const admins = await db.user.findMany({
+      where: { role: "ADMIN", status: "ACTIVE" },
+      select: { id: true },
+    });
+    for (const admin of admins) {
+      await notify({
+        userId: admin.id,
+        type: "SYSTEM",
+        title: "A seller is awaiting verification",
+        message: `${created.businessName} submitted business details for review.`,
+      });
+    }
+  }
 
   await notify({
     userId: user.id,
@@ -137,7 +157,7 @@ export async function createProfile(
     title: "Business profile saved",
     message:
       user.role === "SELLER"
-        ? `Thanks — ${created.businessName} is saved. An administrator will review your business details before you can publish products.`
+        ? `Thanks — ${created.businessName} is saved and awaiting review. An administrator will check your business details before you can publish products.`
         : `Thanks — ${created.businessName} is saved. You can update these details at any time.`,
   });
 
