@@ -24,7 +24,25 @@ export function Header() {
               <Link href={roleHome(user.role)} className="text-secondary hover:text-primary">
                 Overview
               </Link>
-              {user.role === "ADMIN" ? null : (
+              {user.role === "ADMIN" ? (
+                <>
+                  <Link href="/admin/verifications" className="text-secondary hover:text-primary">
+                    Verifications
+                  </Link>
+                  <Link href="/admin/products" className="text-secondary hover:text-primary">
+                    Moderation
+                  </Link>
+                  <Link href="/admin/users" className="text-secondary hover:text-primary">
+                    Users
+                  </Link>
+                  <Link href="/admin/reports" className="text-secondary hover:text-primary">
+                    Reports
+                  </Link>
+                  <Link href="/admin/audit" className="text-secondary hover:text-primary">
+                    Audit
+                  </Link>
+                </>
+              ) : (
                 <>
                   <Link
                     href={user.role === "SELLER" ? "/seller/profile" : "/buyer/profile"}
