@@ -8,7 +8,7 @@ The initial version focuses on **home textiles and home furnishings**, connectin
 
 The platform uses an order-request model in which buyers submit requests and sellers confirm availability, pricing, quantity, and delivery terms before accepting an order.
 
-> **Project Status:** MVP in development (Phase 5 of 8 complete)
+> **Project Status:** MVP in development (Phase 6 of 8 complete)
 > **Initial Category:** Home Textiles & Home Furnishings
 > **Seller Region:** Sonipat, Haryana, India
 > **Buyer Region:** Delhi-NCR, India
@@ -501,7 +501,7 @@ These commands may change as the project configuration evolves.
 | 3     | Business profiles and onboarding   | Done         |
 | 4     | Product catalog and discovery      | Done         |
 | 5     | Order request and confirmation     | Done         |
-| 6     | Notifications and communication    | Planned      |
+| 6     | Notifications                     | Done         |
 | 7     | Admin dashboard and moderation     | Planned      |
 | 8     | Testing and pilot launch           | Planned      |
 

@@ -179,3 +179,45 @@ Endpoints (Express `/api/v1/orders/**`, mirrored by Next `/api/orders/**`):
 - Acceptance re-checks that every product is still live (`PRODUCT_UNAVAILABLE`),
   because availability is seller-provided information (BR-09).
 - No payment step exists anywhere in this flow (BR-14).
+
+## 10. Notifications (Phase 6)
+
+Endpoints (Express `/api/v1/notifications/**`, mirrored by Next
+`/api/notifications/**`):
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET | `/notifications` | Own notifications, newest first; `?page=&pageSize=&unreadOnly=true`, unread count in `meta.unread` |
+| GET | `/notifications/unread-count` | Badge count for the header |
+| POST | `/notifications/:id/read` | Mark one notification read |
+| POST | `/notifications/read-all` | Mark every unread notification read |
+
+- Notifications are private: every query is scoped by `userId`, and marking
+  one read uses `updateMany({ where: { id, userId } })`, so another account's
+  id yields `404` rather than a leak.
+- Types follow the ER diagram: `ORDER_REQUEST`, `ORDER_RESPONSE`,
+  `ORDER_UPDATE`, `ACCOUNT_UPDATE`, `SYSTEM`.
+- Events currently delivered (`order-notifications.ts` writes the
+  counterparty's notice, never the actor's):
+
+  | Event | Recipient | Type |
+  | ----- | --------- | ---- |
+  | Request submitted | seller | `ORDER_REQUEST` |
+  | Proposal sent to buyer | buyer | `ORDER_UPDATE` |
+  | Seller accepted | buyer | `ORDER_RESPONSE` |
+  | Buyer accepted proposal | seller | `ORDER_RESPONSE` |
+  | Declined by either party | counterparty | `ORDER_RESPONSE` |
+  | Buyer cancelled | seller | `ORDER_UPDATE` |
+  | Order completed | buyer | `ORDER_UPDATE` |
+  | Account created | new user | `SYSTEM` |
+  | Business profile saved | owner | `ACCOUNT_UPDATE` |
+
+- A **drafted** proposal (`SELLER_PROPOSED`) notifies nobody — the buyer must
+  not learn about terms the seller has not sent yet.
+- Notices carry `orderRequestId` (nullable FK, `ON DELETE SET NULL`) so the UI
+  can link straight to the related request for the reader's role.
+- Notice creation never blocks or rolls back the business action that caused
+  it: failures are logged and swallowed.
+- The root layout resolves the session and unread count server-side, so the
+  header badge is correct on the first paint; the client re-checks on window
+  focus and after read actions. Email and push delivery are out of scope.
