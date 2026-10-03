@@ -250,6 +250,7 @@ model OrderRequest {
 
   items         OrderItem[]
   statusHistory OrderStatusHistory[]
+  notifications Notification[]
 
   @@index([buyerId])
   @@index([sellerId])
@@ -300,17 +301,23 @@ model OrderStatusHistory {
 }
 
 model Notification {
-  id        String           @id @default(uuid()) @db.Uuid
-  userId    String           @map("user_id") @db.Uuid
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  message   String
-  type      NotificationType
-  isRead    Boolean          @default(false) @map("is_read")
-  createdAt DateTime         @default(now()) @map("created_at")
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  message        String
+  type           NotificationType
+  isRead         Boolean          @default(false) @map("is_read")
+  // Set when the notification is about an order request, so the UI can link
+  // straight to it. SetNull keeps the notice if the request is ever removed.
+  orderRequestId String?          @map("order_request_id") @db.Uuid
+  orderRequest   OrderRequest?    @relation(fields: [orderRequestId], references: [id], onDelete: SetNull)
+  createdAt      DateTime         @default(now()) @map("created_at")
 
   @@index([userId])
   @@index([userId, isRead])
+  // Newest-first listing per user.
+  @@index([userId, createdAt])
   @@map("notifications")
 }
 
