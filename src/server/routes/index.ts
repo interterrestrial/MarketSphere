@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authRouter } from "./auth.routes";
 import { businessProfileRouter } from "./business-profile.routes";
+import { orderRouter } from "./order.routes";
 import { productRouter } from "./product.routes";
 
 /**
@@ -17,3 +18,4 @@ export const v1Router = Router();
 v1Router.use("/auth", authRouter);
 v1Router.use("/business-profile", businessProfileRouter);
 v1Router.use("/products", productRouter);
+v1Router.use("/orders", orderRouter);
