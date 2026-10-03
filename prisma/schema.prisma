@@ -111,6 +111,8 @@ model User {
   notifications   Notification[]
   reportsFiled    Report[]             @relation("ReportsFiled")
   reportsAgainst  Report[]             @relation("ReportsAgainst")
+  auditEntries    AuditLog[]           @relation("AuditActor")
+  sellerReviews   BusinessProfile[]    @relation("SellerReviewer")
 
   @@map("users")
 }
@@ -136,6 +138,11 @@ model BusinessProfile {
   // Seller-only: regions/cities the business supplies (PRD FR-07, FR-11).
   serviceArea        String?            @map("service_area")
   verificationStatus VerificationStatus @default(NOT_SUBMITTED) @map("verification_status")
+  // Administrator review trail (FR-09, FR-42): who decided, when, and why.
+  reviewNote         String?            @map("review_note")
+  reviewedAt         DateTime?          @map("reviewed_at")
+  reviewedById       String?            @map("reviewed_by_id") @db.Uuid
+  reviewedBy         User?              @relation("SellerReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
   createdAt          DateTime           @default(now()) @map("created_at")
   updatedAt          DateTime           @updatedAt @map("updated_at")
 
@@ -343,4 +350,23 @@ model Report {
   @@index([productId])
   @@index([status])
   @@map("reports")
+}
+
+/// Record of an administrator decision (FR-46). `action` is a stable code from
+/// ADMIN_ACTIONS in src/server/services/admin-core.ts; keeping it a string
+/// lets the vocabulary grow without a migration per new decision type.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String   @map("actor_id") @db.Uuid
+  actor      User     @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id") @db.Uuid
+  note       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
