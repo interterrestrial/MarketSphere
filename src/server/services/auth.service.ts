@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "../../lib/db";
 import { hashPassword, verifyPassword } from "../../lib/password";
+import { notify } from "./notification.service";
 import type { AuthUser } from "../../types/auth";
 import { AppError } from "../middleware/error-handler";
 import type { LoginInput, RegisterInput } from "../validators/auth";
@@ -41,6 +42,18 @@ export async function registerUser(input: RegisterInput): Promise<AuthUser> {
       status: input.role === "SELLER" ? "PENDING" : "ACTIVE",
     },
   });
+
+  // New accounts get a starting point rather than an empty screen (FR-39).
+  await notify({
+    userId: user.id,
+    type: "SYSTEM",
+    title: "Welcome to MarketSphere",
+    message:
+      input.role === "SELLER"
+        ? "Complete your business profile so buyers can find you. Publishing opens once an administrator approves your account."
+        : "Complete your business profile with a delivery address so you can send order requests.",
+  });
+
   return toPublicUser(user);
 }
 

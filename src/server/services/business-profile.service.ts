@@ -7,6 +7,7 @@ import type {
   ProfilePayload,
 } from "../../types/business-profile";
 import { AppError, NotFoundError } from "../middleware/error-handler";
+import { notify } from "./notification.service";
 import type {
   CreateProfileInput,
   ProfileRole,
@@ -113,7 +114,7 @@ export async function createProfile(
       "A business profile already exists for this account."
     );
   }
-  await db.businessProfile.create({
+  const created = await db.businessProfile.create({
     data: {
       userId: user.id,
       businessName: input.businessName,
@@ -129,6 +130,17 @@ export async function createProfile(
       serviceArea: input.serviceArea,
     },
   });
+
+  await notify({
+    userId: user.id,
+    type: "ACCOUNT_UPDATE",
+    title: "Business profile saved",
+    message:
+      user.role === "SELLER"
+        ? `Thanks — ${created.businessName} is saved. An administrator will review your business details before you can publish products.`
+        : `Thanks — ${created.businessName} is saved. You can update these details at any time.`,
+  });
+
   return profileForRole(user);
 }
 

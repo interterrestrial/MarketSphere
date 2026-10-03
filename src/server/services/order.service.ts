@@ -5,6 +5,7 @@ import type { AuthUser } from "../../types/auth";
 import type { OrderRequestDto, OrderSummaryDto } from "../../types/order";
 import { AppError } from "../middleware/error-handler";
 import type { SubmitOrderInput } from "../validators/order";
+import { notifyOrderEvent } from "./order-notifications";
 import { isConfirmed, statusLabel } from "./order-status";
 import { loadForParty, REQUEST_INCLUDE, type RequestRow, toDecimal, toDto } from "./order-core";
 
@@ -169,7 +170,20 @@ export async function submitOrderRequest(
     return request;
   });
 
-  return toDto(created);
+  const dto = toDto(created);
+  await notifyOrderEvent({
+    order: {
+      id: created.id,
+      reference: created.reference,
+      buyerId: created.buyerId,
+      sellerId: created.sellerId,
+    },
+    nextStatus: created.status,
+    actorId: buyer.id,
+    itemSummary: dto.items.map((item) => `${item.productName} ×${item.quantity}`).join(", "),
+    note: null,
+  });
+  return dto;
 }
 
 export async function getOrderRequest(user: AuthUser, requestId: string): Promise<OrderRequestDto> {

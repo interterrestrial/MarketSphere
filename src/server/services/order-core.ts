@@ -3,6 +3,7 @@ import { db } from "../../lib/db";
 import type { AuthUser } from "../../types/auth";
 import type { OrderItemDto, OrderRequestDto } from "../../types/order";
 import { NotFoundError } from "../middleware/error-handler";
+import { notifyOrderEvent } from "./order-notifications";
 import {
   assertTransition,
   isConfirmed,
@@ -186,5 +187,25 @@ export async function applyTransition(
     });
   });
 
-  return toDto(updated, user);
+  const dto = toDto(updated, user);
+
+  // Notify after the transaction commits so a notice never describes a change
+  // that was rolled back.
+  await notifyOrderEvent({
+    order: {
+      id: updated.id,
+      reference: updated.reference,
+      buyerId: updated.buyerId,
+      sellerId: updated.sellerId,
+    },
+    nextStatus,
+    actorId: user.id,
+    itemSummary: dto.items
+      .map((item) => `${item.productName} ×${item.effectiveQuantity}`)
+      .join(", "),
+    agreedTotal: dto.agreedTotal,
+    note: options.note ?? null,
+  });
+
+  return dto;
 }
