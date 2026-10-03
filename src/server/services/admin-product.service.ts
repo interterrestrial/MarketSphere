@@ -84,10 +84,19 @@ export async function listProductsForModeration(options: {
 }
 
 /** One listing with the detail a moderator needs to judge it. */
-export async function getProductForModeration(productId: string): Promise<
-  AdminProductRow & { description: string | null; availabilityNote: string | null; variants: Array<{ name: string; value: string }> }
+export async function getProductForModeration(
+  productId: string
+): Promise<
+  AdminProductRow & {
+    description: string | null;
+    availabilityNote: string | null;
+    variants: Array<{ name: string; value: string }>;
+  }
 > {
-  const product = await db.product.findUnique({ where: { id: productId }, include: PRODUCT_INCLUDE });
+  const product = await db.product.findUnique({
+    where: { id: productId },
+    include: PRODUCT_INCLUDE,
+  });
   if (!product) throw new NotFoundError("Product");
   return {
     ...toRow(product),
@@ -118,18 +127,10 @@ export async function moderateProduct(
     );
   }
   if (decision === "approve" && product.status !== "PENDING_REVIEW") {
-    throw new AppError(
-      409,
-      "INVALID_TRANSITION",
-      "Only listings awaiting review can be approved."
-    );
+    throw new AppError(409, "INVALID_TRANSITION", "Only listings awaiting review can be approved.");
   }
   if (decision === "archive" && product.status !== "ACTIVE") {
-    throw new AppError(
-      409,
-      "INVALID_TRANSITION",
-      "Only live listings can be archived."
-    );
+    throw new AppError(409, "INVALID_TRANSITION", "Only live listings can be archived.");
   }
 
   const nextStatus: ProductStatus =
