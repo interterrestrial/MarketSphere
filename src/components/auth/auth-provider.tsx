@@ -23,6 +23,9 @@ interface AuthContextValue {
   loading: boolean;
   /** Latest auth failure code (e.g. ACCOUNT_PENDING) for the UI to explain. */
   errorCode: string | null;
+  /** Unread notification count, resolved on the server for the first paint. */
+  unread: number;
+  setUnread: (count: number) => void;
   login: (input: LoginInput) => Promise<AuthUser>;
   register: (input: RegisterInput) => Promise<AuthUser>;
   logout: () => Promise<void>;
@@ -42,10 +45,25 @@ export function roleHome(role: AuthUser["role"]): string {
   }
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+/**
+ * `initialUser` is resolved in the root layout (a server component), so the
+ * first paint already knows who is signed in and how many notifications are
+ * unread. Pass `undefined` only where the session was not resolved.
+ */
+export function AuthProvider({
+  children,
+  initialUser,
+  initialUnread = 0,
+}: {
+  children: ReactNode;
+  initialUser?: AuthUser | null;
+  initialUnread?: number;
+}) {
+  const [user, setUser] = useState<AuthUser | null>(initialUser ?? null);
+  const [unread, setUnread] = useState(initialUnread);
+  const [loading, setLoading] = useState(initialUser === undefined);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const resolvedOnServer = initialUser !== undefined;
 
   const refresh = useCallback(async () => {
     try {
@@ -59,8 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (!resolvedOnServer) {
+      void refresh();
+    }
+  }, [refresh, resolvedOnServer]);
 
   const login = useCallback(async (input: LoginInput) => {
     setErrorCode(null);
@@ -95,11 +115,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await api("/api/auth/logout", { method: "POST" }).catch(() => null);
     setUser(null);
+    setUnread(0);
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, errorCode, login, register, logout, refresh }),
-    [user, loading, errorCode, login, register, logout, refresh]
+    () => ({
+      user,
+      loading,
+      errorCode,
+      unread,
+      setUnread,
+      login,
+      register,
+      logout,
+      refresh,
+    }),
+    [user, loading, errorCode, unread, login, register, logout, refresh]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

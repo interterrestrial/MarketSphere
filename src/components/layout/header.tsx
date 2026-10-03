@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth, roleHome } from "@/components/auth/auth-provider";
+import { NotificationIndicator } from "@/components/notifications/notification-indicator";
 
 /**
  * Role-aware top navigation. Links reflect what the signed-in account type
@@ -47,7 +48,11 @@ export function Header() {
                   </Link>
                 </>
               )}
-              <span className="text-muted" aria-label={`Signed in as ${user.name}`}>
+              <NotificationIndicator />
+              <span
+                className="hidden text-muted sm:inline"
+                aria-label={`Signed in as ${user.name}`}
+              >
                 {user.name}
               </span>
               {user.status === "PENDING" ? (
