@@ -75,3 +75,13 @@ export interface OrderSummaryDto {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * Statuses in which the buyer may still withdraw a request (FR-37). Kept
+ * here so the status machine and the UI agree on one list.
+ */
+export const BUYER_CANCELLABLE_STATUSES: RequestStatus[] = [
+  "PENDING_SELLER",
+  "SELLER_PROPOSED",
+  "AWAITING_BUYER",
+];

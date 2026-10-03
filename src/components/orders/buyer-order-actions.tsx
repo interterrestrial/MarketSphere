@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
-import type { OrderRequestDto } from "@/types/order";
+import { BUYER_CANCELLABLE_STATUSES, type OrderRequestDto } from "@/types/order";
 
 /**
  * Buyer actions on a request (FR-34, FR-37): accept or decline the seller's
@@ -18,7 +18,7 @@ export function BuyerOrderActions({ order }: { order: OrderRequestDto }) {
   const [busy, setBusy] = useState(false);
 
   const canRespondToProposal = order.status === "AWAITING_BUYER";
-  const canCancel = ["PENDING_SELLER", "AWAITING_BUYER"].includes(order.status);
+  const canCancel = BUYER_CANCELLABLE_STATUSES.includes(order.status);
   if (!canRespondToProposal && !canCancel) return null;
 
   async function run(action: string, confirmText?: string) {

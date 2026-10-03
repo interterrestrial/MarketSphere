@@ -8,7 +8,7 @@ The initial version focuses on **home textiles and home furnishings**, connectin
 
 The platform uses an order-request model in which buyers submit requests and sellers confirm availability, pricing, quantity, and delivery terms before accepting an order.
 
-> **Project Status:** MVP planning and development
+> **Project Status:** MVP in development (Phase 5 of 8 complete)
 > **Initial Category:** Home Textiles & Home Furnishings
 > **Seller Region:** Sonipat, Haryana, India
 > **Buyer Region:** Delhi-NCR, India
@@ -468,6 +468,11 @@ The following scripts are expected to be configured in `package.json`.
 | `npm run build`          | Build the application        |
 | `npm run start`          | Start the production server  |
 | `npm run lint`           | Run code-quality checks      |
+| `npm run typecheck`      | Run TypeScript checks        |
+| `npm run format`         | Format the codebase          |
+| `npm run dev:all`        | Run the web app and API together |
+| `npm run db:seed`        | Seed the product categories  |
+| `npm run admin:create`   | Create an administrator      |
 | `npx prisma migrate dev` | Apply database migrations    |
 | `npx prisma generate`    | Generate Prisma Client       |
 
@@ -488,17 +493,17 @@ These commands may change as the project configuration evolves.
 
 ## Development Roadmap
 
-| Phase | Focus                              | Status  |
-| ----- | ---------------------------------- | ------- |
-| 1     | Project setup and architecture     | Planned |
-| 2     | Authentication and role management | Planned |
-| 3     | Seller and buyer onboarding        | Planned |
-| 4     | Product catalog management         | Planned |
-| 5     | Product discovery and search       | Planned |
-| 6     | Order request workflow             | Planned |
-| 7     | Notifications and communication    | Planned |
-| 8     | Admin dashboard and moderation     | Planned |
-| 9     | Testing and pilot launch           | Planned |
+| Phase | Focus                              | Status       |
+| ----- | ---------------------------------- | ------------ |
+| 0     | Project setup and tooling          | Done         |
+| 1     | Database design and API foundation | Done         |
+| 2     | Authentication and role management | Done         |
+| 3     | Business profiles and onboarding   | Done         |
+| 4     | Product catalog and discovery      | Done         |
+| 5     | Order request and confirmation     | Done         |
+| 6     | Notifications and communication    | Planned      |
+| 7     | Admin dashboard and moderation     | Planned      |
+| 8     | Testing and pilot launch           | Planned      |
 
 The roadmap will be updated as features are implemented and validated.
 

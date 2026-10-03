@@ -133,3 +133,49 @@ Failure (`4xx`/`5xx`):
   an order request is submitted in the next phase.
 - Prices are stored as `numeric(12,2)` and always surfaced as *indicative*
   until a seller accepts a request (BR-06).
+
+## 9. Order requests (Phase 5)
+
+Endpoints (Express `/api/v1/orders/**`, mirrored by Next `/api/orders/**`):
+
+| Method | Path | Party | Purpose |
+| ------ | ---- | ----- | ------- |
+| GET | `/orders` | both | Requests where the caller is buyer or seller, with per-status counts in `meta.counts` |
+| POST | `/orders` | buyer | Submit a request (FR-28) |
+| GET | `/orders/:id` | both | Request with items and full status history |
+| POST | `/orders/:id/accept` | seller | Confirm a final unit price per line (FR-31) |
+| POST | `/orders/:id/reject` | seller | Decline the request (FR-32) |
+| POST | `/orders/:id/propose` | seller | Counter with new quantities/prices (FR-33) |
+| POST | `/orders/:id/send-proposal` | seller | Ask the buyer to respond |
+| POST | `/orders/:id/accept-proposal` | buyer | Accept proposed terms (FR-34) |
+| POST | `/orders/:id/decline-proposal` | buyer | Decline proposed terms (FR-34) |
+| POST | `/orders/:id/cancel` | buyer | Withdraw before anything is agreed (FR-37) |
+| POST | `/orders/:id/complete` | seller | Mark an accepted order fulfilled |
+
+- Every action takes an optional `{ "note": "..." }`; notes are stored on the
+  history entry they belong to.
+- **State machine** (`src/server/services/order-status.ts`): all changes go
+  through `assertTransition`, which refuses invalid moves with
+  `409 INVALID_TRANSITION` and wrong-role moves with `403 ROLE_FORBIDDEN`.
+  Terminal states (`REJECTED`, `CANCELLED`, `COMPLETED`) accept nothing.
+- Lifecycle: `PENDING_SELLER → ACCEPTED | REJECTED | SELLER_PROPOSED`,
+  `SELLER_PROPOSED → AWAITING_BUYER`, `AWAITING_BUYER → ACCEPTED | REJECTED`,
+  `ACCEPTED → COMPLETED`, with `CANCEL` available to the buyer before terms
+  are agreed.
+- A drafted proposal is private to the seller: while the status is
+  `SELLER_PROPOSED` the buyer's payload omits the proposed figures entirely,
+  so nothing can be mistaken for agreed terms.
+- Submission validates: products exist, all belong to **one seller**
+  (`ONE_SELLER_PER_REQUEST`), listings are `ACTIVE` and `isAvailable`,
+  quantities meet the stated MOQ, and any chosen variant exists
+  (`PRODUCT_UNAVAILABLE`, `VALIDATION_ERROR` with per-item details).
+- Product name, variant, quantity, and prices are snapshotted onto
+  `ORDER_ITEM`, so later catalogue edits never rewrite a request (BR-08).
+- `proposedTotal` / `agreedTotal` are always recomputed server-side from
+  validated quantities × prices; a line without a price yields `null` rather
+  than a guess (BR-11).
+- Only the two parties can read or act on a request; anyone else receives
+  `404` so request ids cannot be probed.
+- Acceptance re-checks that every product is still live (`PRODUCT_UNAVAILABLE`),
+  because availability is seller-provided information (BR-09).
+- No payment step exists anywhere in this flow (BR-14).

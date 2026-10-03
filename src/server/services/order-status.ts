@@ -17,7 +17,7 @@ import { AppError } from "../middleware/error-handler";
  *   seller proposes   SELLER_PROPOSED --(send)--> AWAITING_BUYER
  *   buyer accepts     ACCEPTED
  *   buyer declines    REJECTED
- *   buyer cancels     CANCELLED   (only before terms are agreed)
+ *   buyer cancels     CANCELLED   (any time before terms are agreed)
  *   either completes  COMPLETED   (from ACCEPTED)
  */
 
@@ -54,6 +54,8 @@ const TRANSITIONS: Record<RequestStatus, Partial<Record<OrderAction, Transition>
     CANCEL: { to: "CANCELLED", actor: "BUYER", label: "Buyer cancelled the request" },
   },
   SELLER_PROPOSED: {
+    // The buyer keeps the right to withdraw while terms are still being drafted.
+    CANCEL: { to: "CANCELLED", actor: "BUYER", label: "Buyer cancelled the request" },
     REVISE_PROPOSAL: {
       to: "SELLER_PROPOSED",
       actor: "SELLER",
