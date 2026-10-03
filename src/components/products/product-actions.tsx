@@ -65,7 +65,7 @@ export function ProductActions({
         </Button>
       ) : (
         <Button variant="secondary" disabled={busy} onClick={() => void run("publish")}>
-          {status === "INACTIVE" ? "Reactivate listing" : "Publish listing"}
+          {status === "INACTIVE" ? "Resubmit for review" : "Submit for review"}
         </Button>
       )}
       {status === "DRAFT" ? (

@@ -34,14 +34,14 @@ export async function ProductEditor({
       </div>
       <p className="mt-2 text-sm text-secondary">
         {product
-          ? "Changes apply immediately. Published listings stay live while you edit."
-          : "Save as a draft first — you can add images and variants, then publish when ready."}
+          ? "Changes apply immediately. Live listings stay visible while you edit."
+          : "Save as a draft first, then submit it for review."}
       </p>
 
       {user.status !== "ACTIVE" ? (
         <p className="mt-5 rounded-md border border-warning px-3 py-2 text-sm text-warning">
-          Your account is awaiting approval. You can prepare this listing, but publishing stays
-          locked until an administrator approves the account.
+          Your account is awaiting approval. You can prepare this listing, but submitting it for
+          review stays locked until an administrator approves your account.
         </p>
       ) : null}
 

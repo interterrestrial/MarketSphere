@@ -122,10 +122,12 @@ Failure (`4xx`/`5xx`):
 - Next.js mirrors the same surface under `/api/products/**`.
 - Ownership: every mutation loads the product scoped to the caller's
   `sellerId` and answers 404 otherwise, so ids cannot be probed.
-- Lifecycle: new listings are `DRAFT`; publishing requires an active account
-  **and** a business profile. `DELETE` only removes drafts — published
-  listings must be archived (`409 ARCHIVE_REQUIRED`) so order history keeps
-  its references (BR-08).
+- Lifecycle: new listings are `DRAFT`; submitting requires an active account
+  **and** a business profile, and moves the listing to `PENDING_REVIEW`. Only
+  an administrator can make a listing visible (FR-20), so a seller cannot
+  publish unilaterally. `DELETE` only removes drafts — published listings must
+  be archived (`409 ARCHIVE_REQUIRED`) so order history keeps its references
+  (BR-08).
 - Visibility (BR-02/BR-03): buyers only ever see `ACTIVE` products whose
   seller is `ACTIVE` and has a business profile.
 - Availability is seller-provided information (`isAvailable` +

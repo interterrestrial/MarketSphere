@@ -47,7 +47,7 @@ export function SellerProductsView({ user, items, total }: SellerProductsViewPro
         <div className="mt-6">
           <EmptyState
             title="No products yet"
-            description="Add your first listing with images, minimum order quantity, and an indicative price so buyers can find you."
+            description="Add your first listing with images, minimum order quantity, and an indicative price, then submit it for review."
             action={
               <Link
                 href="/seller/products/new"

@@ -46,9 +46,10 @@ async function ownedProductDto(user: AuthUser, productId: string): Promise<Selle
 }
 
 /**
- * Publishing requires an active account and a business profile (PRD §6.2:
- * only approved sellers may publish). Administrator moderation of listings
- * (FR-20) arrives with the admin dashboard, so publication is direct here.
+ * Submitting a listing for publication requires an active account and a
+ * business profile (PRD §6.2: only approved sellers may publish). The listing
+ * then goes to PENDING_REVIEW and an administrator makes it visible (FR-20),
+ * so sellers never control their own visibility.
  */
 async function assertCanPublish(user: AuthUser): Promise<void> {
   if (user.status !== "ACTIVE") {
@@ -125,11 +126,22 @@ export async function updateProduct(
   return ownedProductDto(user, productId);
 }
 
-/** Publishes a draft or re-activates an archived listing. */
+/**
+ * Submits a draft, rejected, or archived listing for review. The product stays
+ * invisible to buyers until an administrator approves it (FR-20), so sellers
+ * never control their own visibility.
+ */
 export async function publishProduct(user: AuthUser, productId: string): Promise<SellerProductDto> {
-  await ownedProduct(user, productId);
+  const product = await ownedProduct(user, productId);
+  if (product.status === "ACTIVE") {
+    throw new AppError(
+      409,
+      "ALREADY_LIVE",
+      "This listing is already live. Archive it before submitting it for review again."
+    );
+  }
   await assertCanPublish(user);
-  await db.product.update({ where: { id: productId }, data: { status: "ACTIVE" } });
+  await db.product.update({ where: { id: productId }, data: { status: "PENDING_REVIEW" } });
   return ownedProductDto(user, productId);
 }
 

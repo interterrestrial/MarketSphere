@@ -7,10 +7,10 @@ const labels: Record<
   { text: string; tone: "neutral" | "success" | "warning" | "danger" }
 > = {
   DRAFT: { text: "Draft", tone: "neutral" },
-  PENDING_REVIEW: { text: "In review", tone: "warning" },
+  PENDING_REVIEW: { text: "Awaiting admin review", tone: "warning" },
   ACTIVE: { text: "Live", tone: "success" },
-  REJECTED: { text: "Rejected", tone: "danger" },
-  INACTIVE: { text: "Archived", tone: "warning" },
+  REJECTED: { text: "Changes requested", tone: "danger" },
+  INACTIVE: { text: "Archived", tone: "neutral" },
 };
 
 export function ProductStatusBadge({ status }: { status: ProductStatus }) {
