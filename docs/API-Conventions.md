@@ -223,3 +223,49 @@ Endpoints (Express `/api/v1/notifications/**`, mirrored by Next
 - The root layout resolves the session and unread count server-side, so the
   header badge is correct on the first paint; the client re-checks on window
   focus and after read actions. Email and push delivery are out of scope.
+
+## 11. Administration (Phase 7)
+
+Endpoints (Express `/api/v1/admin/**`, mirrored by Next `/api/admin/**`).
+Every one of them is behind `authenticate` + `requireRole("ADMIN")`, and each
+service call re-checks with `requireAdmin`, so hiding a link is never the only
+protection (BR-01).
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET | `/admin/stats` | Platform statistics (FR-41) |
+| GET | `/admin/sellers` | Seller verification queue, `?status=` (FR-42) |
+| POST | `/admin/sellers/:id/approve` | Approve a seller; activates the account |
+| POST | `/admin/sellers/:id/reject` | Reject with a required reason |
+| POST | `/admin/sellers/:id/suspend` | Suspend account, hide live listings |
+| POST | `/admin/sellers/:id/reactivate` | Reinstate the account |
+| GET | `/admin/users` | Account list, `?role=&status=` (FR-43) |
+| POST | `/admin/users/:id/suspend` \| `/reactivate` | Suspend or reinstate any non-admin |
+| GET | `/admin/products` | Moderation queue, `?status=` (FR-44) |
+| GET | `/admin/products/:id` | Listing detail for review |
+| POST | `/admin/products/:id/approve` \| `/reject` \| `/archive` | Moderation decision |
+| GET | `/admin/reports` | Report queue, `?status=` (FR-45) |
+| POST | `/admin/reports/:id/resolve` \| `/dismiss` | Record the outcome |
+| GET | `/admin/audit` | Administrative decision history (FR-46) |
+
+- **Sellers cannot publish themselves.** Submitting a listing moves it to
+  `PENDING_REVIEW`; only `POST /admin/products/:id/approve` makes it visible
+  (FR-20, BR-03). Re-submitting a live listing is refused with
+  `409 ALREADY_LIVE`.
+- Seller approval sets `verificationStatus = APPROVED` **and**
+  `AccountStatus = ACTIVE`, which is what unlocks submitting listings.
+  Rejection requires a reason (`400 REASON_REQUIRED`) and sets the account to
+  `REJECTED`.
+- Suspension takes effect immediately — `authenticate` re-reads status on every
+  request — and moves the seller's live listings to `INACTIVE` so they leave
+  buyer search. Administrator accounts cannot be suspended from these screens.
+- Decisions that need justification (seller/product rejection, report outcome)
+  refuse to proceed without it, so the audit trail is meaningful.
+- Every decision writes an `AUDIT_LOG` row with `action`, `entityType`,
+  `entityId`, `note`, and the acting administrator. Entries are immutable and
+  are listed newest-first at `/admin/audit`.
+- Affected users are notified: `ACCOUNT_UPDATE` for account decisions,
+  `SYSTEM` for listing decisions, and `SYSTEM` to active administrators when a
+  seller submits a profile for review.
+- Administrators never negotiate prices or quantities on anyone's behalf
+  (Use-Case-Diagram §5); the admin surface has no order-term endpoints.

@@ -8,7 +8,7 @@ The initial version focuses on **home textiles and home furnishings**, connectin
 
 The platform uses an order-request model in which buyers submit requests and sellers confirm availability, pricing, quantity, and delivery terms before accepting an order.
 
-> **Project Status:** MVP in development (Phase 6 of 8 complete)
+> **Project Status:** MVP in development (Phase 7 of 8 complete)
 > **Initial Category:** Home Textiles & Home Furnishings
 > **Seller Region:** Sonipat, Haryana, India
 > **Buyer Region:** Delhi-NCR, India
@@ -473,6 +473,21 @@ The following scripts are expected to be configured in `package.json`.
 | `npm run dev:all`        | Run the web app and API together |
 | `npm run db:seed`        | Seed the product categories  |
 | `npm run admin:create`   | Create an administrator      |
+
+## Administration
+
+Administrators sign in like any other account and land on `/admin`, where they
+approve sellers, moderate listings, manage accounts, review reports, and read
+the audit history. The API refuses these actions to non-administrators
+regardless of what the browser sends, and every decision is recorded with the
+administrator, the entity, and the reason.
+
+```bash
+ADMIN_NAME="Platform Ops" ADMIN_EMAIL="ops@example.com" ADMIN_PASSWORD="…" npm run admin:create
+```
+
+Sellers cannot publish listings themselves: a submitted listing waits for
+administrator approval before buyers can see it.
 | `npx prisma migrate dev` | Apply database migrations    |
 | `npx prisma generate`    | Generate Prisma Client       |
 
@@ -502,7 +517,7 @@ These commands may change as the project configuration evolves.
 | 4     | Product catalog and discovery      | Done         |
 | 5     | Order request and confirmation     | Done         |
 | 6     | Notifications                     | Done         |
-| 7     | Admin dashboard and moderation     | Planned      |
+| 7     | Admin dashboard and moderation     | Done         |
 | 8     | Testing and pilot launch           | Planned      |
 
 The roadmap will be updated as features are implemented and validated.
