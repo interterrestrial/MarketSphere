@@ -84,9 +84,7 @@ export async function listProductsForModeration(options: {
 }
 
 /** One listing with the detail a moderator needs to judge it. */
-export async function getProductForModeration(
-  productId: string
-): Promise<
+export async function getProductForModeration(productId: string): Promise<
   AdminProductRow & {
     description: string | null;
     availabilityNote: string | null;
