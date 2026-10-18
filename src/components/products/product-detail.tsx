@@ -92,7 +92,7 @@ export function ProductDetail({ product, user }: { product: ProductDetailDto; us
           </dl>
 
           {isBuyer ? (
-            <div className="mt-6 rounded-lg border border-subtle bg-surface p-4">
+            <div className="mt-6 rounded-lg border border-subtle bg-surface p-4 shadow-panel">
               <p className="text-sm text-secondary">
                 Submitting a request does not confirm an order or trigger any payment. The seller
                 reviews your quantities and confirms price, availability, and delivery before an

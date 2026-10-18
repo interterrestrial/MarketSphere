@@ -100,7 +100,7 @@ export default async function AdminUsersPage({
           {items.map((user) => (
             <li
               key={user.id}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-subtle bg-surface p-4"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-subtle bg-surface p-4 shadow-panel"
             >
               <div className="min-w-0">
                 <p className="text-body">{user.businessName ?? user.name}</p>

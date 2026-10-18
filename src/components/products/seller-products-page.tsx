@@ -37,7 +37,7 @@ export function SellerProductsView({ user, items, total }: SellerProductsViewPro
       </div>
 
       {pendingApproval ? (
-        <p className="mt-5 rounded-md border border-warning px-3 py-2 text-sm text-warning">
+        <p className="mt-5 rounded-md border border-warning bg-warning-soft px-3 py-2 text-sm text-warning">
           Your account is awaiting approval, so listings stay in draft until an administrator
           approves it. Finish your business profile first if you have not yet.
         </p>
@@ -63,7 +63,7 @@ export function SellerProductsView({ user, items, total }: SellerProductsViewPro
           {items.map((product) => (
             <li
               key={product.id}
-              className="flex flex-wrap items-center gap-4 rounded-lg border border-subtle bg-surface p-4"
+              className="flex flex-wrap items-center gap-4 rounded-lg border border-subtle bg-surface p-4 shadow-panel"
             >
               <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-background">
                 {product.imageUrl ? (

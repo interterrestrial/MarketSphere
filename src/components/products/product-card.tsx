@@ -11,7 +11,7 @@ export function ProductCard({ product }: { product: ProductCardDto }) {
   const moq = moqLabel(product.minimumOrderQuantity);
 
   return (
-    <li className="flex flex-col rounded-lg border border-subtle bg-surface p-4">
+    <li className="flex flex-col rounded-lg border border-subtle bg-surface p-4 shadow-panel">
       <div className="h-40 overflow-hidden rounded-md bg-background">
         {product.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

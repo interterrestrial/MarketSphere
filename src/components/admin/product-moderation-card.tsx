@@ -47,7 +47,7 @@ export function ProductModerationCard({ product }: { product: AdminProductRow })
   }
 
   return (
-    <li className="rounded-lg border border-subtle bg-surface p-4">
+    <li className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex min-w-0 gap-3">
           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-background">

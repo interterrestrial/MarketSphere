@@ -39,7 +39,7 @@ export async function ProductEditor({
       </p>
 
       {user.status !== "ACTIVE" ? (
-        <p className="mt-5 rounded-md border border-warning px-3 py-2 text-sm text-warning">
+        <p className="mt-5 rounded-md border border-warning bg-warning-soft px-3 py-2 text-sm text-warning">
           Your account is awaiting approval. You can prepare this listing, but submitting it for
           review stays locked until an administrator approves your account.
         </p>

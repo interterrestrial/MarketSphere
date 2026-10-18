@@ -91,7 +91,7 @@ export function OrderDashboard({
             <li key={order.id}>
               <Link
                 href={`${basePath}/${order.id}`}
-                className="flex flex-wrap items-center gap-4 rounded-lg border border-subtle bg-surface p-4 hover:border-primary"
+                className="flex flex-wrap items-center gap-4 rounded-lg border border-subtle bg-surface p-4 shadow-panel hover:border-primary"
               >
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 text-sm">

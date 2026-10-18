@@ -40,19 +40,19 @@ export function BuyerOrderActions({ order }: { order: OrderRequestDto }) {
   }
 
   return (
-    <section className="rounded-lg border border-subtle bg-surface p-4">
+    <section className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
       <h2 className="font-heading text-base text-body">Your response</h2>
       {error ? (
         <p
           role="alert"
-          className="mt-3 rounded-md border border-danger px-3 py-2 text-sm text-danger"
+          className="mt-3 rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
         >
           {error}
         </p>
       ) : null}
 
       {canRespondToProposal && order.proposalNote ? (
-        <p className="mt-2 rounded-md border border-info px-3 py-2 text-sm text-secondary">
+        <p className="mt-2 rounded-md border border-info bg-info-soft px-3 py-2 text-sm text-secondary">
           Seller note: {order.proposalNote}
         </p>
       ) : null}

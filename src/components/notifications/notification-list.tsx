@@ -83,7 +83,7 @@ export function NotificationList({
       {error ? (
         <p
           role="alert"
-          className="mb-3 rounded-md border border-danger px-3 py-2 text-sm text-danger"
+          className="mb-3 rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
         >
           {error}
         </p>

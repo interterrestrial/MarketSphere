@@ -55,7 +55,7 @@ export function OrderRequestDetail({
       </div>
 
       {!order.confirmed ? (
-        <p className="mt-4 rounded-md border border-warning px-3 py-2 text-sm text-warning">
+        <p className="mt-4 rounded-md border border-warning bg-warning-soft px-3 py-2 text-sm text-warning">
           This is a request, not a confirmed order. No payment is collected by MarketSphere and
           nothing is committed until both sides agree the terms.
         </p>
@@ -63,7 +63,7 @@ export function OrderRequestDetail({
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <section className="rounded-lg border border-subtle bg-surface p-4">
+          <section className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
             <h2 className="font-heading text-base text-body">Requested products</h2>
             <ul className="mt-3 space-y-3">
               {order.items.map((item) => (
@@ -112,7 +112,7 @@ export function OrderRequestDetail({
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-lg border border-subtle bg-surface p-4">
+          <section className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
             <h2 className="font-heading text-base text-body">Terms</h2>
             <dl className="mt-2">
               <Row
@@ -148,7 +148,7 @@ export function OrderRequestDetail({
             ) : null}
           </section>
 
-          <section className="rounded-lg border border-subtle bg-surface p-4">
+          <section className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
             <h2 className="font-heading text-base text-body">History</h2>
             <div className="mt-3">
               <OrderTimeline history={order.history} />
@@ -163,7 +163,7 @@ export function OrderRequestDetail({
 /** Seller marks an accepted order as fulfilled. */
 function CompletePanel({ orderId }: { orderId: string }) {
   return (
-    <section className="rounded-lg border border-subtle bg-surface p-4">
+    <section className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
       <h2 className="font-heading text-base text-body">Fulfillment</h2>
       <p className="mt-1 text-xs text-muted">
         Coordinate delivery with the buyer, then mark the order complete once it has been handed

@@ -140,7 +140,7 @@ export function OrderRequestForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-6" noValidate>
-      <div className="rounded-lg border border-subtle bg-surface p-4">
+      <div className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
         <p className="text-sm text-secondary">
           This sends a <strong className="text-body">request</strong>, not an order. Nothing is
           charged and no payment is collected. The seller confirms availability, final pricing, and
@@ -149,7 +149,10 @@ export function OrderRequestForm({
       </div>
 
       {formError ? (
-        <p role="alert" className="rounded-md border border-danger px-3 py-2 text-sm text-danger">
+        <p
+          role="alert"
+          className="rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
+        >
           {formError}
         </p>
       ) : null}
@@ -157,7 +160,10 @@ export function OrderRequestForm({
       <section className="space-y-4">
         <h2 className="font-heading text-base text-body">Requested products</h2>
         {rows.map((row, index) => (
-          <div key={row.productId} className="rounded-lg border border-subtle bg-surface p-4">
+          <div
+            key={row.productId}
+            className="rounded-lg border border-subtle bg-surface p-4 shadow-panel"
+          >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <p className="font-heading text-base text-body">{row.productName}</p>
               {rows.length > 1 ? (

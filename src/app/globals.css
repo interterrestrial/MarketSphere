@@ -34,6 +34,13 @@
   --color-danger: #b3261e;
   --color-info: #1b6aa8;
 
+  /* Tinted backgrounds for status badges and notices. */
+  --color-success-soft: #e7f4ec;
+  --color-warning-soft: #fbf1df;
+  --color-danger-soft: #fbebe9;
+  --color-info-soft: #e8f1f8;
+  --color-neutral-soft: #f1f3f6;
+
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;

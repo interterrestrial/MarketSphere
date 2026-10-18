@@ -88,7 +88,7 @@ export function SellerResponsePanel({ order }: { order: OrderRequestDto }) {
   }, 0);
 
   return (
-    <section className="rounded-lg border border-subtle bg-surface p-4">
+    <section className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
       <h2 className="font-heading text-base text-body">Your response</h2>
       <p className="mt-1 text-xs text-muted">
         Review stock and minimum order quantities before confirming. Payment and delivery are
@@ -98,7 +98,7 @@ export function SellerResponsePanel({ order }: { order: OrderRequestDto }) {
       {error ? (
         <p
           role="alert"
-          className="mt-3 rounded-md border border-danger px-3 py-2 text-sm text-danger"
+          className="mt-3 rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
         >
           {error}
         </p>
@@ -106,7 +106,7 @@ export function SellerResponsePanel({ order }: { order: OrderRequestDto }) {
       {message ? (
         <p
           role="status"
-          className="mt-3 rounded-md border border-success px-3 py-2 text-sm text-success"
+          className="mt-3 rounded-md border border-success bg-success-soft px-3 py-2 text-sm text-success"
         >
           {message}
         </p>

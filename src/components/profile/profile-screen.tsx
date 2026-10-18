@@ -57,7 +57,7 @@ export function ProfileScreen({
       </div>
 
       {accountPending ? (
-        <p className="mt-4 rounded-md border border-warning px-3 py-2 text-sm text-warning">
+        <p className="mt-4 rounded-md border border-warning bg-warning-soft px-3 py-2 text-sm text-warning">
           Your account is awaiting approval. You can complete your profile now; listing products
           opens once an administrator approves your account.
         </p>

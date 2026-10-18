@@ -56,19 +56,19 @@ export default async function AdminPage() {
       </section>
 
       <section className="mt-8 grid gap-4 lg:grid-cols-3">
-        <div className="rounded-lg border border-subtle bg-surface p-4">
+        <div className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
           <h2 className="font-heading text-base text-body">Accounts by role</h2>
           <div className="mt-3">
             <CountBreakdown counts={stats.users.byRole} />
           </div>
         </div>
-        <div className="rounded-lg border border-subtle bg-surface p-4">
+        <div className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
           <h2 className="font-heading text-base text-body">Seller verification</h2>
           <div className="mt-3">
             <CountBreakdown counts={stats.sellers.byVerification} />
           </div>
         </div>
-        <div className="rounded-lg border border-subtle bg-surface p-4">
+        <div className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
           <h2 className="font-heading text-base text-body">Order requests</h2>
           <div className="mt-3">
             <CountBreakdown counts={stats.orders.byStatus} />
@@ -76,7 +76,7 @@ export default async function AdminPage() {
         </div>
       </section>
 
-      <section className="mt-8 rounded-lg border border-subtle bg-surface p-4">
+      <section className="mt-8 rounded-lg border border-subtle bg-surface p-4 shadow-panel">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-heading text-base text-body">Recent administrative activity</h2>
           <Link href="/admin/audit" className="text-sm text-primary">

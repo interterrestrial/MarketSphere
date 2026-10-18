@@ -114,14 +114,17 @@ export function ProductForm({
   return (
     <form onSubmit={onSubmit} className="space-y-6" noValidate>
       {formError ? (
-        <p role="alert" className="rounded-md border border-danger px-3 py-2 text-sm text-danger">
+        <p
+          role="alert"
+          className="rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
+        >
           {formError}
         </p>
       ) : null}
       {saved ? (
         <p
           role="status"
-          className="rounded-md border border-success px-3 py-2 text-sm text-success"
+          className="rounded-md border border-success bg-success-soft px-3 py-2 text-sm text-success"
         >
           {isEdit ? "Product updated." : "Draft product created."}
         </p>

@@ -52,7 +52,7 @@ export function ReportReviewCard({ report }: { report: AdminReportRow }) {
   }
 
   return (
-    <li className="rounded-lg border border-subtle bg-surface p-4">
+    <li className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-body">{report.reason}</p>
