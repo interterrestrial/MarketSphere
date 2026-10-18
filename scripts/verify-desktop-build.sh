@@ -37,21 +37,39 @@ echo
 # ---------------------------------------------------------------------------
 echo "1. Bundle contents"
 # ---------------------------------------------------------------------------
-EXPECTED_FILES=(
-  "electron/lib/navigation-policy.js"
-  "electron/main.js"
-  "electron/preload.js"
-  "package.json"
+# Expectations come from the electron-builder `files` list so this script
+# cannot drift away from what is actually meant to ship. Only positive entries
+# matter; the "!..." entries are exclusions.
+# Bash 3.2 (the macOS default) has no `mapfile`, so read line by line.
+EXPECTED_FILES=""
+while IFS= read -r line; do
+  EXPECTED_FILES="${EXPECTED_FILES}${line}
+"
+done < <(
+  node -e "
+    const pkg = require('./package.json');
+    const files = pkg.build.files.filter((entry) => !entry.startsWith('!'));
+    for (const entry of files) {
+      // Expand a trailing '/**/*' into every matching source file.
+      if (entry.endsWith('/**/*')) {
+        const dir = entry.slice(0, -5);
+        const walk = (d) => require('node:fs').readdirSync(d, { withFileTypes: true })
+          .flatMap((e) => (e.isDirectory() ? walk(d + '/' + e.name) : [d + '/' + e.name]));
+        console.log(walk(dir).join('\n'));
+      } else {
+        console.log(entry);
+      }
+    }
+  " 2>/dev/null | sed '/^$/d'
 )
 
-# asar lists directories without a trailing slash, so they are listed
-# explicitly below and filtered out rather than inferred.
-EXPECTED_DIRS=("electron" "electron/lib")
+# asar lists directories without a trailing slash, so add the parents of every
+# expected file rather than trying to infer which entries are directories.
+EXPECTED_DIRS=$(printf '%s' "$EXPECTED_FILES" | sed 's|/[^/]*$||' | sort -u | grep -v "^${EXPECTED_FILES%%$'\n'*}$" || true)
 
-# Normalise away the leading slash so comparisons are like-for-like.
 ACTUAL_FILES=$(npx --no-install asar list "$ASAR" 2>/dev/null | sed 's|^/||' | grep -v '^$' | sort)
 
-for file in "${EXPECTED_FILES[@]}"; do
+for file in $EXPECTED_FILES; do
   if echo "$ACTUAL_FILES" | grep -qx "$file"; then
     pass "contains $file"
   else

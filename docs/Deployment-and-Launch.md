@@ -341,6 +341,10 @@ Stated plainly, because they affect launch decisions:
   storage bucket in play; `STORAGE_*` is reserved for that future work.
 - **No automated CI.** The test suite is run manually; a bad commit can reach
   `main` without a gate.
+- **The desktop app is unsigned.** Every `.dmg` build is ad-hoc signed and
+  will not open on another Mac. Distribution needs an Apple Developer ID
+  certificate and notarization credentials — see
+  [`Desktop-App.md`](Desktop-App.md).
 - **No external security review or load testing** — see
   [`Testing-and-Security.md`](Testing-and-Security.md).
 

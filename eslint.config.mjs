@@ -16,12 +16,16 @@ const config = [
     ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "dist/**", "next-env.d.ts"],
   },
   {
-    // Electron's main process runs in Node.js, not the browser/bundler —
-    // `require()` is the correct module style there.
-    files: ["electron/**/*.js"],
+    // Electron's main process and the build hooks run in Node.js, not the
+    // browser/bundler — `require()` is the correct module style there.
+    files: ["electron/**/*.js", "packaging/**/*.js"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
     },
+  },
+  {
+    // Generated bundle: not ours to lint or reformat.
+    ignores: ["electron/dist/**"],
   },
 ];
 

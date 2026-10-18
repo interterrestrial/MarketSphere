@@ -68,6 +68,7 @@ one is pinned down:
 | Administrators cannot act as buyers or sellers | `authorization` |
 | A suspended account loses access immediately | `authorization`, `orders` |
 | Notifications stay with their owner | `orders` |
+| Desktop navigation policy and bundle safety | `desktop-policy`, `desktop-packaging`, `verify-desktop-build.sh` |
 | Emails cannot be split by letter case | `auth` |
 
 ## Security measures in place
@@ -120,9 +121,11 @@ Stated plainly, because a green suite is not proof of safety:
   every screen; the remaining screens are covered through their services.
 - Browser behaviour is asserted in jsdom, not in a real browser, so layout and
   responsive behaviour still need manual checks on a physical device.
-- **The Electron shell is untested.** `electron/main.js` is currently a
-  minimal window that loads `http://localhost:3000`; it has no production URL,
-  no preload script, and no test coverage. It is the next phase.
+- **The Electron shell has unit tests but no E2E automation.** Its URL policy
+  and packaging configuration are covered (`desktop-policy`,
+  `desktop-packaging`), and `scripts/verify-desktop-build.sh` asserts the built
+  bundle ships no server secrets. There is no Playwright-style test that drives
+  the real window, so UI regressions in the shell are still found by hand.
 
 ## Running the suite against a deployment
 
