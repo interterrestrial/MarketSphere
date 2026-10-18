@@ -27,12 +27,8 @@ export function ProductDetail({ product, user }: { product: ProductDetailDto; us
   const ownListing = user.role === "SELLER" && user.id === product.seller?.userId;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
-      <Link href="/products" className="text-sm text-secondary hover:text-primary">
-        ← Back to products
-      </Link>
-
-      <div className="mt-4 grid gap-8 md:grid-cols-2">
+    <>
+      <div className="grid gap-8 md:grid-cols-2">
         <div className="space-y-3">
           {product.images.length === 0 ? (
             <div className="flex h-72 items-center justify-center rounded-lg border border-subtle bg-surface text-sm text-muted">
@@ -144,6 +140,6 @@ export function ProductDetail({ product, user }: { product: ProductDetailDto; us
           </ul>
         </section>
       ) : null}
-    </main>
+    </>
   );
 }

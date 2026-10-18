@@ -6,6 +6,7 @@ import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderTimeline } from "@/components/orders/order-timeline";
 import { SellerResponsePanel } from "@/components/orders/seller-response-panel";
 import { BuyerOrderActions, CompleteOrderButton } from "@/components/orders/buyer-order-actions";
+import { PageShell } from "@/components/layout/page-shell";
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -35,25 +36,26 @@ export function OrderRequestDetail({
   const canComplete = isSeller && order.status === "ACCEPTED";
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <Link href={basePath} className="text-sm text-secondary hover:text-primary">
-        ← All requests
-      </Link>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-3 font-heading text-2xl text-body">
-            <span className="font-mono text-sm text-muted">{order.reference}</span>
-            <OrderStatusBadge status={order.status} viewerRole={isSeller ? "SELLER" : "BUYER"} />
-          </h1>
-          <p className="mt-1 text-sm text-secondary">
-            {isSeller ? "Buyer" : "Seller"}:{" "}
-            {(isSeller ? order.buyer : order.seller).businessName ??
-              (isSeller ? order.buyer.name : order.seller.name)}
-          </p>
-        </div>
-      </div>
-
+    <PageShell
+      title={
+        <span className="flex flex-wrap items-center gap-3">
+          <span className="font-mono text-base text-muted">{order.reference}</span>
+          <OrderStatusBadge status={order.status} viewerRole={isSeller ? "SELLER" : "BUYER"} />
+        </span>
+      }
+      description={`${isSeller ? "Buyer" : "Seller"}: ${
+        (isSeller ? order.buyer : order.seller).businessName ??
+        (isSeller ? order.buyer.name : order.seller.name)
+      }`}
+      actions={
+        <Link
+          href={basePath}
+          className="rounded-md border border-subtle bg-surface px-3 py-1.5 text-sm text-secondary hover:border-primary hover:text-body"
+        >
+          All requests
+        </Link>
+      }
+    >
       {!order.confirmed ? (
         <p className="mt-4 rounded-md border border-warning bg-warning-soft px-3 py-2 text-sm text-warning">
           This is a request, not a confirmed order. No payment is collected by MarketSphere and
@@ -156,7 +158,7 @@ export function OrderRequestDetail({
           </section>
         </div>
       </div>
-    </main>
+    </PageShell>
   );
 }
 

@@ -15,7 +15,8 @@ export function PageShell({
   children,
   width = "default",
 }: {
-  title: string;
+  /** May include a badge next to the title (e.g. an order status). */
+  title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;

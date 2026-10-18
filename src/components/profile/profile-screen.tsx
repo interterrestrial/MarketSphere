@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { VerificationBadge } from "@/components/ui/verification-badge";
 import type { ProfilePayload } from "@/types/business-profile";
 import type { ProfileRole } from "@/server/validators/business-profile";
+import { PageShell } from "@/components/layout/page-shell";
 
 /**
  * Business profile screen shared by buyers and sellers: onboarding form when
@@ -27,35 +28,37 @@ export function ProfileScreen({
 
   if (!profile) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-12">
-        <h1 className="font-heading text-2xl text-body">Set up your business profile</h1>
-        <p className="mt-2 text-sm text-secondary">
-          {role === "SELLER"
+      <PageShell
+        width="narrow"
+        title="Set up your business profile"
+        description={
+          role === "SELLER"
             ? "Tell buyers who you are and what you supply. You can edit these details at any time."
-            : "Tell sellers who you are and where orders should be delivered."}
-        </p>
-        <div className="mt-8">
-          <ProfileForm role={role} profile={null} />
-        </div>
-      </main>
+            : "Tell sellers who you are and where orders should be delivered."
+        }
+      >
+        <ProfileForm role={role} profile={null} />
+      </PageShell>
     );
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-12">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl text-body">Business profile</h1>
-        {editing ? null : (
+    <PageShell
+      width="narrow"
+      title="Business profile"
+      description="Buyers see your business name, location, and description. Contact details stay private."
+      actions={
+        editing ? null : (
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-md border border-subtle px-3 py-1.5 text-sm text-secondary hover:text-body"
+            className="rounded-md border border-subtle bg-surface px-3 py-1.5 text-sm text-secondary hover:border-primary hover:text-body"
           >
             Edit profile
           </button>
-        )}
-      </div>
-
+        )
+      }
+    >
       {accountPending ? (
         <p className="mt-4 rounded-md border border-warning bg-warning-soft px-3 py-2 text-sm text-warning">
           Your account is awaiting approval. You can complete your profile now; listing products
@@ -141,6 +144,6 @@ export function ProfileScreen({
           </button>
         </div>
       ) : null}
-    </main>
+    </PageShell>
   );
 }
