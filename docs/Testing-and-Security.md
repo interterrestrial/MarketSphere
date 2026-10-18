@@ -17,8 +17,14 @@ Integration and frontend tests need PostgreSQL running.
 
 ### The test database
 
-Tests must never touch development data. They connect to
+Tests must never touch development or production data. They connect to
 `marketsphere_test`, overridable with `TEST_DATABASE_URL`.
+
+> **Never point the suite at Neon.** `resetDb()` truncates every domain table
+> on connect; against the production database that destroys the marketplace.
+> `test:db:setup` refuses to migrate any database whose name does not end in
+> `_test`, but `DATABASE_URL` is still what Prisma connects to — keep the test
+> environment pointing at a local PostgreSQL instance.
 
 ```bash
 createdb marketsphere_test
@@ -114,3 +120,15 @@ Stated plainly, because a green suite is not proof of safety:
   every screen; the remaining screens are covered through their services.
 - Browser behaviour is asserted in jsdom, not in a real browser, so layout and
   responsive behaviour still need manual checks on a physical device.
+- **The Electron shell is untested.** `electron/main.js` is currently a
+  minimal window that loads `http://localhost:3000`; it has no production URL,
+  no preload script, and no test coverage. It is the next phase.
+
+## Running the suite against a deployment
+
+Tests run against a local database only. To verify a deployed instance, use
+the smoke script instead — it makes no destructive writes:
+
+```bash
+./scripts/smoke-test.sh <frontend-url> <api-url>
+```

@@ -8,7 +8,7 @@ The initial version focuses on **home textiles and home furnishings**, connectin
 
 The platform uses an order-request model in which buyers submit requests and sellers confirm availability, pricing, quantity, and delivery terms before accepting an order.
 
-> **Project Status:** MVP in development (Phase 7 of 8 complete)
+> **Project Status:** Feature-complete MVP. Phases 0–10 done; the Electron desktop application is the next phase.
 > **Initial Category:** Home Textiles & Home Furnishings
 > **Seller Region:** Sonipat, Haryana, India
 > **Buyer Region:** Delhi-NCR, India
@@ -28,11 +28,14 @@ The platform uses an order-request model in which buyers submit requests and sel
 * [Project Structure](#project-structure)
 * [Getting Started](#getting-started)
 * [Environment Variables](#environment-variables)
+* [Deployment](#deployment)
 * [Development](#development)
+* [Testing](#testing)
 * [Development Roadmap](#development-roadmap)
 * [Future Scope](#future-scope)
 * [Contributing](#contributing)
 * [License](#license)
+* [Project Documentation](#project-documentation)
 
 ---
 
@@ -131,7 +134,8 @@ They can:
 
 ## Key Features
 
-The following features define the planned MVP. Their implementation status will be updated as development progresses.
+The following features define the MVP. All of them are implemented and covered
+by automated tests; see [Testing](#testing).
 
 | Feature                    | Description                                          | Priority |
 | -------------------------- | ---------------------------------------------------- | -------- |
@@ -221,151 +225,137 @@ Payments and logistics will initially be coordinated outside the platform.
 
 ## Technology Stack
 
-MarketSphere is planned around the following technologies.
+| Technology        | Purpose                                       |
+| ----------------- | --------------------------------------------- |
+| Next.js 15        | App framework, routing, and API route handlers |
+| React 19          | Component-based user interface                |
+| TypeScript        | Type safety and maintainability               |
+| Tailwind CSS      | Styling and design tokens                     |
+| Node.js           | Server-side runtime                           |
+| Express 4         | Standalone API over the same service layer    |
+| PostgreSQL        | Relational database                           |
+| Prisma 6          | ORM and schema migrations                     |
+| Zod               | Request validation                            |
+| jose + bcryptjs   | JWT sessions and password hashing             |
+| Vitest            | Unit, integration, and component testing      |
+| Electron          | Desktop shell (next phase)                    |
 
-| Technology   | Purpose                                  |
-| ------------ | ---------------------------------------- |
-| Next.js      | Application framework and routing        |
-| React.js     | Component-based user interface           |
-| TypeScript   | Type safety and maintainability          |
-| Tailwind CSS | Responsive styling                       |
-| Node.js      | Server-side runtime                      |
-| Express.js   | Backend API and business logic           |
-| PostgreSQL   | Relational database                      |
-| Prisma       | ORM and database schema management       |
-| Figma        | UI/UX design and prototyping             |
-| Git          | Version control                          |
-| GitHub       | Source code management and collaboration |
+The backend is integrated into the Next.js application: route handlers under
+`src/app/api/` call the same services as the standalone Express server, so the
+browser talks to a single same-origin `/api/*` path. No cross-origin request
+is made from the browser, which keeps the session cookie first-party.
 
-The backend will be integrated into the Next.js application architecture where practical to avoid unnecessary duplicate compilation and deployment.
-
-The final hosting and storage providers will be selected during implementation.
+Hosting is settled: the web app on **Vercel**, the optional Express API on
+**Render**, and PostgreSQL on **Neon**. Object storage is deferred — product
+images are external `http(s)` URLs and there is no upload endpoint yet.
 
 ---
 
 ## System Architecture
 
-MarketSphere will follow a modular application architecture.
+One service layer, two transports, one database.
 
 ```text
-                 BUYERS / SELLERS / ADMINS
-                            |
-                            v
-                  NEXT.JS APPLICATION
-                            |
-             +--------------+--------------+
-             |                             |
-             v                             v
-       REACT FRONTEND                BACKEND API
-       + TAILWIND CSS                NODE.JS + EXPRESS
-             |                             |
-             |                  +----------+----------+
-             |                  |          |          |
-             |                  v          v          v
-             |             AUTHENTICATION PRODUCT   ORDER
-             |             & AUTHORIZATION CATALOG  MANAGEMENT
-             |                             |          |
-             |                             |          |
-             |                  +----------+----------+
-             |                             |
-             |                             v
-             |                       PRISMA ORM
-             |                             |
-             |                             v
-             |                        POSTGRESQL
-             |
-             v
-       RESPONSIVE USER
-          INTERFACE
-
-                  FILE / OBJECT STORAGE
-                  (Product Images and
-                  Verification Documents)
+             BROWSER  ·  ELECTRON APP
+                          |
+                          v   same-origin /api/*  (session cookie is first-party)
+                 NEXT.JS APPLICATION  (Vercel)
+                          |
+      +-------------------+-------------------+
+      |                                       |
+      v                                       v
+ REACT UI + TAILWIND            ROUTE HANDLERS -> SERVICE LAYER
+                                        |
+                                        v
+                            src/server/services/*
+                          (auth · catalog · orders · notifications · admin)
+                                        |
+        +-------------------------------+-------------------------------+
+        |                               |                               |
+        v                               v                               v
+ EXPRESS API (Render, optional)   NEXT HEALTH PROBE              (same services)
+   /api/v1/* over HTTP
+        |                               |
+        +---------------+---------------+
+                        |
+                        v  Prisma (TLS)
+                  POSTGRESQL 16  (Neon)
 ```
+
+Why both transports: the browser uses same-origin route handlers so cookies
+stay first-party and no CORS preflight sits on the hot path. The Express server
+exposes the identical services over `/api/v1` for API clients, the Electron
+app, health probes, and the integration test suite. Both share the same
+services and validators, so a rule enforced in one is enforced in the other.
 
 ### Core Modules
 
-* **Authentication:** Registration, login, sessions, and access control.
-* **User Management:** Buyer and seller profiles.
-* **Product Catalog:** Product listings, images, variants, and availability.
-* **Product Discovery:** Search, filters, and sorting.
-* **Order Management:** Requests, seller responses, and order status history.
-* **Notifications:** Important updates for buyers and sellers.
-* **Administration:** Verification, moderation, and reporting.
-
-Detailed architecture and database relationships will be documented separately.
+* **Authentication:** Registration, login, JWT sessions, role checks.
+* **User Management:** Buyer and seller business profiles with onboarding state.
+* **Product Catalog:** Listings, image URLs, variants, availability, admin approval.
+* **Product Discovery:** Search, filters, sorting, pagination.
+* **Order Management:** Requests, seller proposals, status history.
+* **Notifications:** In-app notices, scoped to their owner.
+* **Administration:** Verification, moderation, reporting, audit log.
 
 ---
 
 ## Project Structure
 
-The following is a proposed structure. It will be updated to match the actual repository as implementation progresses.
-
 ```text
 marketsphere/
+├── docs/
+│   ├── API-Conventions.md            Response envelope, status codes, endpoints
+│   ├── Design-Implementation.md      Shipped design tokens and deviations
+│   ├── Deployment-and-Launch.md      Production topology and go-live checklist
+│   ├── Testing-and-Security.md       Test layout, rules under test, limitations
+│   ├── Product/                      PRD.md, Design.md
+│   ├── Architecture Diagrams/        ER, UML class, use case
+│   └── Research/                     Research.md
 │
-├── public/
-│   ├── images/
-│   └── icons/
-│
-├── src/
-│   ├── app/
-│   │   ├── (auth)/
-│   │   ├── buyer/
-│   │   ├── seller/
-│   │   ├── admin/
-│   │   ├── products/
-│   │   ├── api/
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   │
-│   ├── components/
-│   │   ├── ui/
-│   │   ├── layout/
-│   │   ├── products/
-│   │   ├── orders/
-│   │   └── forms/
-│   │
-│   ├── server/
-│   │   ├── routes/
-│   │   ├── controllers/
-│   │   ├── services/
-│   │   ├── middleware/
-│   │   └── validators/
-│   │
-│   ├── lib/
-│   ├── hooks/
-│   ├── types/
-│   └── utils/
+├── electron/
+│   └── main.js                       Desktop shell (next phase, in progress)
 │
 ├── prisma/
-│   └── schema.prisma
+│   ├── schema.prisma                 12 models, 13 tables
+│   ├── migrations/                   Applied migration history
+│   └── seed.ts                       Launch categories (idempotent)
 │
-├── docs/
-│   ├── PRD.md
-│   ├── Design.md
-│   ├── System-Architecture.md
-│   ├── ER-Diagram.md
-│   ├── UML-Class-Diagram.md
-│   └── Use-Case-Diagram.md
+├── scripts/
+│   ├── create-admin.ts               Out-of-band admin creation
+│   ├── render-build.sh               Install, generate, migrate, seed
+│   ├── smoke-test.sh                 Endpoint checks against a deployment
+│   ├── backup-db.sh                  Timestamped gzip dump, keeps 10
+│   └── restore-db.sh                 Restore from a dump
+│
+├── src/
+│   ├── app/                          Next.js routes and /api/* handlers
+│   ├── components/                   ui · layout · products · orders · admin
+│   ├── lib/                          db, env, session, password, format, api client
+│   ├── server/
+│   │   ├── routes/                   Express routers
+│   │   ├── services/                 Business logic (transport-independent)
+│   │   ├── middleware/               auth, csrf, rate limit, security, errors
+│   │   └── validators/               Zod schemas
+│   └── types/                        Shared DTO and domain types
 │
 ├── tests/
+│   ├── unit/                         Pure business rules
+│   ├── integration/                  Services + HTTP via supertest
+│   ├── frontend/                     Components in jsdom
+│   ├── helpers/db.ts                 resetDb() and factories
+│   └── setup/                        Test env: DB URL, signing key, limits
 │
-├── .env.example
-├── .gitignore
-├── package.json
-├── tsconfig.json
-├── next.config.ts
-└── README.md
+├── .env.example                      Local development template
+├── .env.production.example           Production template (Neon)
+├── next.config.ts                    Security headers and CSP
+├── render.yaml                       Express service blueprint
+└── vitest.config.ts                  Three test projects
 ```
-
-This structure is a starting point, not a requirement to create every directory immediately. The actual structure should follow the implementation and the chosen API integration approach.
 
 ---
 
 ## Getting Started
-
-> **Note:** The commands below describe the intended development setup. They will become fully applicable once the project dependencies and configuration files are in place.
 
 ### Prerequisites
 
@@ -403,56 +393,94 @@ cp .env.example .env
 
 Fill in the required database and authentication configuration.
 
-### 4. Set Up the Database
+### 4. Set Up the Databases
 
-After configuring PostgreSQL and the database connection, run the project's Prisma migrations.
+The app and the test suite use **separate databases**, so running tests can
+never truncate development data.
 
 ```bash
-npx prisma migrate dev
+createdb marketsphere        # from DATABASE_URL
+npx prisma migrate deploy
+npm run db:seed              # launch categories, idempotent
+
+createdb marketsphere_test   # required by the integration tests
+npm run test:db:setup        # refuses to touch any database not ending in _test
 ```
 
-Generate the Prisma Client if it is not generated automatically by the project scripts.
+### 5. Create an Administrator (optional)
 
 ```bash
-npx prisma generate
+npm run admin:create
 ```
 
-### 5. Start the Development Server
+It reads `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`. Note that curly
+quotes become part of the value — verify with `printf '%s\n' "$ADMIN_EMAIL"`.
+
+### 6. Start the Development Servers
 
 ```bash
-npm run dev
+npm run dev        # Next.js app
+npm run server     # standalone Express API, in a second terminal
+npm run dev:all    # both together
 ```
 
 Open the local development URL shown in the terminal.
+
+### 7. Run the Tests
+
+```bash
+npm test           # 136 tests across unit, integration and frontend
+```
+
+See [Testing](docs/Testing-and-Security.md) for how the suite is organised and
+what it deliberately does not cover.
 
 ---
 
 ## Environment Variables
 
-The application will use environment variables for configuration and secrets.
+Copy the template and fill in the values:
 
-Example `.env.example`:
-
-```env
-# Database
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/marketsphere"
-
-# Application
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-
-# Authentication
-AUTH_SECRET="replace-with-a-secure-random-secret"
-
-# File Storage
-STORAGE_ENDPOINT=""
-STORAGE_BUCKET=""
-STORAGE_ACCESS_KEY=""
-STORAGE_SECRET_KEY=""
+```bash
+cp .env.example .env              # local development
+cp .env.production.example .env.production   # production (gitignored)
 ```
 
-This is a proposed example. The final variables will depend on the authentication and storage providers selected during implementation.
+| Variable | Required | Purpose |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | yes | PostgreSQL connection string |
+| `AUTH_SECRET` | yes | Signs session JWTs; 64 random bytes of hex |
+| `NEXT_PUBLIC_APP_URL` | yes | Public app origin; also the default CSRF allow-list |
+| `NEXT_PUBLIC_API_URL` | yes | Express origin allowed by the CSP; inlined at build time |
+| `PORT` | no | Express port (default `3001`) |
+| `CSRF_ALLOWED_ORIGINS` | no | Extra origins allowed to make state-changing calls |
+| `LOG_LEVEL` | no | `debug`, `info` (default), `warn`, `error` |
+| `NODE_ENV` | no | `development` (default) or `production` |
+| `RATE_LIMIT_DISABLED` | no | **Tests only.** Ignored in production |
+| `DIRECT_DATABASE_URL` | no | Non-pooler URL, used by the build script for migrations |
+| `STORAGE_*` | no | Reserved for a future upload feature; unused today |
 
-**Never commit the actual `.env` file or production secrets to GitHub.**
+The app refuses to start without `AUTH_SECRET` and `DATABASE_URL` rather than
+falling back to an insecure default.
+
+**Never commit `.env`, `.env.production`, or any production secret.** Set
+production values in the Vercel and Render dashboards.
+
+---
+
+## Deployment
+
+Production runs the web app on **Vercel**, the optional Express API on
+**Render**, and PostgreSQL on **Neon**. Two things catch people out:
+
+- Vercel and Render must hold the **identical `AUTH_SECRET`** and
+  `DATABASE_URL`. A mismatch does not error — it silently invalidates every
+  session cookie.
+- `NEXT_PUBLIC_*` variables are inlined at **build time**, so changing
+  `NEXT_PUBLIC_API_URL` needs a rebuild.
+
+Full topology, migration procedure, backup and restore, and the go-live
+checklist are in [docs/Deployment-and-Launch.md](docs/Deployment-and-Launch.md).
 
 ---
 
@@ -460,21 +488,26 @@ This is a proposed example. The final variables will depend on the authenticatio
 
 ### Available Scripts
 
-The following scripts are expected to be configured in `package.json`.
+| Command | Purpose |
+| :--- | :--- |
+| `npm run dev` | Next.js dev server |
+| `npm run server` | Standalone Express API |
+| `npm run dev:all` | Both together |
+| `npm run build` / `npm start` | Production build and serve |
+| `npm test` | Full test suite |
+| `npm run test:unit` / `test:integration` / `test:frontend` | One project at a time |
+| `npm run test:watch` | Watch mode |
+| `npm run test:db:setup` | Migrate the test database (refuses non-`_test` databases) |
+| `npm run typecheck` | TypeScript without emitting |
+| `npm run lint` / `lint:fix` | ESLint |
+| `npm run format` / `format:check` | Prettier |
+| `npm run db:migrate` / `db:generate` / `db:seed` | Prisma tasks |
+| `npm run db:studio` | Prisma Studio |
+| `npm run admin:create` | Create an administrator out-of-band |
+| `npm run check:contrast` | Verify design-token contrast ratios |
+| `npm run electron:dev` / `electron:build` | Desktop shell (in progress) |
 
-| Command                  | Purpose                      |
-| ------------------------ | ---------------------------- |
-| `npm run dev`            | Start the development server |
-| `npm run build`          | Build the application        |
-| `npm run start`          | Start the production server  |
-| `npm run lint`           | Run code-quality checks      |
-| `npm run typecheck`      | Run TypeScript checks        |
-| `npm run format`         | Format the codebase          |
-| `npm run dev:all`        | Run the web app and API together |
-| `npm run db:seed`        | Seed the product categories  |
-| `npm run admin:create`   | Create an administrator      |
-
-## Administration
+### Administration
 
 Administrators sign in like any other account and land on `/admin`, where they
 approve sellers, moderate listings, manage accounts, review reports, and read
@@ -483,15 +516,15 @@ regardless of what the browser sends, and every decision is recorded with the
 administrator, the entity, and the reason.
 
 ```bash
-ADMIN_NAME="Platform Ops" ADMIN_EMAIL="ops@example.com" ADMIN_PASSWORD="…" npm run admin:create
+ADMIN_NAME="Platform Ops" ADMIN_EMAIL="ops@example.com" npm run admin:create
 ```
+
+Export `ADMIN_PASSWORD` from your shell or a secret file rather than inlining
+it — inline secrets persist in shell history. The script is idempotent and
+reports an existing account instead of creating a duplicate.
 
 Sellers cannot publish listings themselves: a submitted listing waits for
 administrator approval before buyers can see it.
-| `npx prisma migrate dev` | Apply database migrations    |
-| `npx prisma generate`    | Generate Prisma Client       |
-
-These commands may change as the project configuration evolves.
 
 ### Development Guidelines
 
@@ -506,21 +539,49 @@ These commands may change as the project configuration evolves.
 
 ---
 
+## Testing
+
+136 automated tests across three projects:
+
+| Project | Environment | Covers |
+| :--- | :--- | :--- |
+| `unit` | Node | Pure business rules: the order state machine, validators, formatting |
+| `integration` | Node + PostgreSQL | Services, middleware, and real HTTP through Express via `supertest` |
+| `frontend` | jsdom | Components a user actually touches, with Testing Library |
+
+Integration tests run against `marketsphere_test` and truncate it between
+tests; `npm run test:db:setup` refuses to migrate any database not ending in
+`_test`, so the development and production databases cannot be damaged by a
+test run.
+
+The suite pins the rules that would cause real harm — a request is never an
+order, one seller per request, MOQ enforcement, party isolation, admin-only
+moderation, immediate effect of a suspension, and that seller-supplied image
+URLs cannot carry `javascript:` or `data:` payloads.
+
+What it does **not** cover is written down in
+[docs/Testing-and-Security.md](docs/Testing-and-Security.md): no penetration
+test, no load testing, and the rate limiter is in-memory and therefore
+single-instance.
+
+---
+
 ## Development Roadmap
 
-| Phase | Focus                              | Status       |
-| ----- | ---------------------------------- | ------------ |
-| 0     | Project setup and tooling          | Done         |
-| 1     | Database design and API foundation | Done         |
-| 2     | Authentication and role management | Done         |
-| 3     | Business profiles and onboarding   | Done         |
-| 4     | Product catalog and discovery      | Done         |
-| 5     | Order request and confirmation     | Done         |
-| 6     | Notifications                     | Done         |
-| 7     | Admin dashboard and moderation     | Done         |
-| 8     | Testing, usability, and pilot launch | Planned    |
-
-The roadmap will be updated as features are implemented and validated.
+| Phase | Focus | Status |
+| :--- | :--- | :--- |
+| 0 | Project setup and tooling | Done |
+| 1 | Database design and API foundation | Done |
+| 2 | Authentication and role management | Done |
+| 3 | Business profiles and onboarding | Done |
+| 4 | Product catalog and discovery | Done |
+| 5 | Order request and confirmation | Done |
+| 6 | Notifications | Done |
+| 7 | Admin dashboard and moderation | Done |
+| 8 | Frontend polish and usability | Done |
+| 9 | Testing and security hardening | Done |
+| 10 | Deployment and launch preparation | Done |
+| 11 | Electron desktop application | In progress |
 
 ---
 
@@ -538,7 +599,7 @@ Potential future improvements include:
 * Multilingual support
 * Expansion to additional product categories and regions
 * Mobile applications
-* Desktop application using Electron.js
+* Object storage and product image uploads (currently external URLs only)
 
 These features are not part of the initial MVP.
 
@@ -569,18 +630,18 @@ A license should be selected before the repository is distributed publicly or ac
 
 ## Project Documentation
 
-Additional documentation will be maintained in the `docs/` directory.
+Documentation is maintained in the `docs/` directory.
 
-| Document                 | Description                                      |
-| ------------------------ | ------------------------------------------------ |
-| `Design-Implementation.md` | Shipped design tokens, components, and deviations |
-| `API-Conventions.md`     | Response envelope, status codes, endpoints      |
-| `PRD.md`                 | Product requirements and MVP scope               |
-| `Design.md`              | UI/UX design principles and specifications       |
-| `System-Architecture.md` | Application architecture and technical decisions |
-| `ER-Diagram.md`          | Database entities and relationships              |
-| `UML-Class-Diagram.md`   | Class structure and relationships                |
-| `Use-Case-Diagram.md`    | User roles and their interactions                |
+| Document | Description |
+| :--- | :--- |
+| [`docs/API-Conventions.md`](docs/API-Conventions.md) | Response envelope, status codes, endpoints |
+| [`docs/Design-Implementation.md`](docs/Design-Implementation.md) | Shipped design tokens and deviations |
+| [`docs/Deployment-and-Launch.md`](docs/Deployment-and-Launch.md) | Production topology, backups, go-live checklist |
+| [`docs/Testing-and-Security.md`](docs/Testing-and-Security.md) | Test layout, rules under test, security posture |
+| [`docs/Product/PRD.md`](docs/Product/PRD.md) | Product requirements and MVP scope |
+| [`docs/Product/Design.md`](docs/Product/Design.md) | UI/UX design principles |
+| [`docs/Architecture Diagrams/`](docs/Architecture%20Diagrams) | ER, UML class, and use-case diagrams |
+| [`docs/Research/Research.md`](docs/Research/Research.md) | Market and technology research |
 
 ---
 

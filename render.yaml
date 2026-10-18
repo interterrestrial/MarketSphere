@@ -1,26 +1,26 @@
 # ===========================================================================
 # MarketSphere — Render Blueprint (Infrastructure as Code)
 # ===========================================================================
-# Render reads this file to provision services. Commit it, then in the
-# Render dashboard: New → Blueprint → point to your GitHub repo.
+# Render reads this file to provision the Express API service.
+# In the Render dashboard: New → Blueprint → point to your GitHub repo.
+#
+# The database is NOT here. Production Postgres is a Neon project, because the
+# pooled endpoint suits serverless traffic from Vercel and Render alike. Set
+# DATABASE_URL to the Neon *pooled* connection string below; adding a Render
+# `databases:` block would create a second database that silently drifts.
 #
 # Docs: https://docs.render.com/infrastructure-as-code
 # ===========================================================================
 
-databases:
-  - name: marketsphere-db
-    plan: free # 90-day free tier; upgrade to starter ($7/mo) for persistence
-    databaseName: marketsphere_prod
-    user: marketsphere
-    region: oregon # closest Render region to India with free tier
-    postgresMajorVersion: "16"
-
 services:
   # ---- Express API Server ----
+  # Optional: the Next.js app on Vercel calls the same services in-process, so
+  # the marketplace works without this service. It exists for API clients, the
+  # Electron app, health monitoring, and smoke tests.
   - type: web
     name: marketsphere-api
     runtime: node
-    region: oregon
+    region: singapore # closest Render region to the Neon ap-southeast-1 DB
     plan: free # 750 free hours/mo; upgrade to starter ($7/mo) for always-on
     buildCommand: chmod +x scripts/render-build.sh && ./scripts/render-build.sh
     startCommand: npm run server
@@ -28,16 +28,19 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Neon pooled connection string. The direct (non-pooler) URL is used for
+      # migrations and dumps; migrations run through render-build.sh, which
+      # needs the direct URL — swap it before a build if the pooler rejects DDL.
       - key: DATABASE_URL
-        fromDatabase:
-          name: marketsphere-db
-          property: connectionString
+        sync: false # Neon pooled URL, e.g. postgresql://…-pooler.…neon.tech/neondb?sslmode=require
+      # Must be byte-identical to the Vercel value, or sessions break silently.
+      # generateValue is intentionally not used: clear it and paste the secret.
       - key: AUTH_SECRET
-        generateValue: true
+        sync: false # 64 random bytes as hex, shared with Vercel
       - key: NEXT_PUBLIC_APP_URL
-        sync: false # set manually after Vercel deploy
+        sync: false # set manually after the Vercel deploy
       - key: CSRF_ALLOWED_ORIGINS
-        sync: false # set to Vercel URL after deploy
+        sync: false # set to the Vercel URL after deploy
       - key: LOG_LEVEL
         value: info
       - key: PORT

@@ -18,10 +18,13 @@ npm ci --prefer-offline
 echo "▸ Generating Prisma client…"
 npx prisma generate
 
+# Migrations run against the direct (non-pooler) endpoint when one is
+# supplied: transaction poolers can reject the DDL Prisma needs.
+MIGRATION_URL="${DIRECT_DATABASE_URL:-${DATABASE_URL:-}}"
 echo "▸ Applying database migrations…"
-npx prisma migrate deploy
+DATABASE_URL="$MIGRATION_URL" npx prisma migrate deploy
 
 echo "▸ Seeding launch categories (idempotent)…"
-npm run db:seed
+DATABASE_URL="$MIGRATION_URL" npm run db:seed
 
 echo "▸ Build complete."

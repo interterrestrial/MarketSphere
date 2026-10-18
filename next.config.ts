@@ -35,6 +35,11 @@ const securityHeaders = [
   { key: "Content-Security-Policy", value: contentSecurityPolicy },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
   { key: "X-DNS-Prefetch-Control", value: "on" },
+  // Only meaningful once traffic is genuinely HTTPS; sending it earlier would
+  // be harmful on a non-TLS host.
+  ...(isDev
+    ? []
+    : [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]),
 ];
 
 const nextConfig: NextConfig = {

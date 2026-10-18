@@ -33,13 +33,24 @@ Failure (`4xx`/`5xx`):
 | 200 | OK | Reads, updates, health (healthy) |
 | 201 | Created | Successful `POST` creating a record |
 | 400 | Bad request | Validation failures, `BAD_JSON`, bad references |
-| 401 | Unauthorized | Missing/invalid credentials (later phases) |
-| 403 | Forbidden | Wrong role for the action (later phases) |
+| 401 | Unauthorized | Missing or invalid credentials (`UNAUTHENTICATED`) |
+| 403 | Forbidden | Wrong role (`ROLE_FORBIDDEN`), inactive account (`ACCOUNT_INACTIVE`), untrusted origin (`ORIGIN_REJECTED`) |
 | 404 | Not found | Unknown endpoint or record (`NOT_FOUND`) |
-| 409 | Conflict | Unique-constraint violations (`CONFLICT`, Prisma P2002) |
-| 429 | Too many requests | Rate-limited auth attempts (`RATE_LIMITED`) |
+| 409 | Conflict | Unique-constraint violations (`CONFLICT`), stale state (`INVALID_TRANSITION`, `NO_PROPOSAL`) |
+| 413 | Payload too large | Body over the 1 MB limit (`PAYLOAD_TOO_LARGE`) |
+| 429 | Too many requests | Rate limit reached (`RATE_LIMITED`) |
 | 503 | Unavailable | Health probe when the database is unreachable |
 | 500 | Server error | Anything unexpected (`INTERNAL_ERROR`, no internals leaked) |
+
+Two notes on deliberate choices:
+
+- **Cross-origin writes answer 403, not 401.** An untrusted `Origin` is
+  rejected before authentication runs, so a cross-site request learns nothing
+  about whether the session is valid.
+- **A malformed body never becomes a 500.** `express.json()` failures are
+  mapped explicitly: `entity.too.large` → 413, `entity.parse.failed` → 400.
+  Previously both surfaced as server errors, which would page an on-call
+  engineer for a client mistake.
 
 ## 3. Endpoint naming
 
@@ -60,14 +71,38 @@ Failure (`4xx`/`5xx`):
 - Known Prisma failures map to HTTP semantics (P2002 → 409, P2025 → 404,
   P2003 → 400); `5xx` responses are logged server-side with the stack,
   clients only see `INTERNAL_ERROR`.
+- Request bodies are capped at **1 MB**. Oversized bodies return
+  `413 PAYLOAD_TOO_LARGE`; malformed JSON returns `400 BAD_JSON`.
+- A `javascript:`, `data:`, or `file:` value in an image field is rejected at
+  validation: `z.url()` alone accepts all of them, and they would be rendered
+  back from seller-supplied data.
+- Emails are lower-cased in the service layer *and* constrained by a unique
+  index on `lower(email)`, so one address can never become two accounts.
 
-## 5. Logging
+## 5. Rate limiting and cross-origin requests
+
+- Login and registration: **20 attempts / 10 minutes / IP**.
+- The rest of the business API: **300 requests / minute / IP**.
+- Keyed per IP **and** route path, so a busy route cannot consume another's
+  budget. Over the limit, the response is `429 RATE_LIMITED`.
+- The limiter is an **in-memory sliding window**, therefore per-process: a
+  multi-instance deployment multiplies the effective limit by the instance
+  count. Move it to Redis before scaling out.
+- State-changing requests (`POST`, `PUT`, `PATCH`, `DELETE`) are checked
+  against `NEXT_PUBLIC_APP_URL` plus `CSRF_ALLOWED_ORIGINS` via `requireTrustedOrigin`.
+  `Origin` is used when present, `Referer` otherwise. A header that is present
+  but unparseable is **rejected** rather than ignored — treating it as "no
+  header" would be a bypass. Requests with neither header are allowed, since
+  a browser always attaches `Origin` to cross-origin writes and non-browser
+  clients cannot be driven by a third-party page.
+
+## 6. Logging
 
 - One line per request: `METHOD path -> STATUS durationMs` (`requestLogger`).
 - Levels via `LOG_LEVEL` (`debug|info|warn|error`, default `info`).
 - `4xx` log at warn, `5xx` at error with stack; request bodies are never logged.
 
-## 6. Authentication (Phase 2)
+## 7. Authentication (Phase 2)
 
 - One service layer (`src/server/services/auth.service.ts`), two thin
   transports sharing logic, validation, and the envelope:
@@ -88,7 +123,7 @@ Failure (`4xx`/`5xx`):
   `ACCOUNT_INACTIVE`. Business operations add `requireActiveAccount`, so a
   pending seller can only work on their own profile (BR-02).
 
-## 7. Business profiles (Phase 3)
+## 8. Business profiles (Phase 3)
 
 - `GET /api/v1/business-profile` — own profile + derived onboarding status
   (`{ completed, percent, missingFields }`), 404 when not created yet.
@@ -107,7 +142,7 @@ Failure (`4xx`/`5xx`):
 - The public view omits `contactPhone`, `gstNumber`, street `address`, and
   `pincode` until PRD §14.2 settles contact visibility.
 
-## 8. Product catalog (Phase 4)
+## 9. Product catalog (Phase 4)
 
 - Discovery (any signed-in account): `GET /api/v1/products` with `q`,
   `category` (id or slug), `minPrice`, `maxPrice`, `sellerCity`,
@@ -136,7 +171,7 @@ Failure (`4xx`/`5xx`):
 - Prices are stored as `numeric(12,2)` and always surfaced as *indicative*
   until a seller accepts a request (BR-06).
 
-## 9. Order requests (Phase 5)
+## 10. Order requests (Phase 5)
 
 Endpoints (Express `/api/v1/orders/**`, mirrored by Next `/api/orders/**`):
 
@@ -182,7 +217,7 @@ Endpoints (Express `/api/v1/orders/**`, mirrored by Next `/api/orders/**`):
   because availability is seller-provided information (BR-09).
 - No payment step exists anywhere in this flow (BR-14).
 
-## 10. Notifications (Phase 6)
+## 11. Notifications (Phase 6)
 
 Endpoints (Express `/api/v1/notifications/**`, mirrored by Next
 `/api/notifications/**`):
@@ -224,7 +259,7 @@ Endpoints (Express `/api/v1/notifications/**`, mirrored by Next
   header badge is correct on the first paint; the client re-checks on window
   focus and after read actions. Email and push delivery are out of scope.
 
-## 11. Administration (Phase 7)
+## 12. Administration (Phase 7)
 
 Endpoints (Express `/api/v1/admin/**`, mirrored by Next `/api/admin/**`).
 Every one of them is behind `authenticate` + `requireRole("ADMIN")`, and each
