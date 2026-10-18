@@ -60,12 +60,24 @@ export const variantSchema = z.object({
 
 export const updateVariantSchema = variantSchema.partial();
 
+/**
+ * Image references only.
+ *
+ * `z.url()` alone also accepts `javascript:`, `data:`, and `file:`, any of
+ * which would end up rendered back into the UI from seller-supplied data.
+ * Only ordinary web URLs are stored.
+ */
+const imageUrlSchema = z
+  .string()
+  .trim()
+  .max(500, "Must be 500 characters or fewer.")
+  .url("Enter a valid image URL.")
+  .refine((value) => /^https?:\/\//i.test(value), {
+    message: "Image URLs must start with http:// or https://.",
+  });
+
 export const productImageSchema = z.object({
-  imageUrl: z
-    .string()
-    .trim()
-    .url("Enter a valid image URL.")
-    .max(500, "Must be 500 characters or fewer."),
+  imageUrl: imageUrlSchema,
   displayOrder: z.coerce.number().int().min(0).max(50).optional(),
 });
 
