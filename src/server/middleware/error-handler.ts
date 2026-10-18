@@ -61,6 +61,12 @@ function prismaToAppError(error: Prisma.PrismaClientKnownRequestError): AppError
   }
 }
 
+/** Body-parser failures thrown by express.json(). */
+interface BodyParserError extends Error {
+  type?: string;
+  status?: number;
+}
+
 /** Final 404 for unmatched routes — keeps unknown paths in the same envelope. */
 export function notFoundHandler(_req: Request, res: Response): void {
   res.status(404).json(fail("NOT_FOUND", "The requested endpoint does not exist."));
@@ -76,6 +82,18 @@ export function errorHandler(
 ): void {
   // Malformed JSON bodies (thrown by express.json()).
   if (error instanceof SyntaxError && "status" in error && error.status === 400) {
+    res.status(400).json(fail("BAD_JSON", "The request body is not valid JSON."));
+    return;
+  }
+
+  // A body over the size limit is a client mistake, not a server fault:
+  // without this it would surface as a 500.
+  const bodyError = error as BodyParserError;
+  if (bodyError?.type === "entity.too.large") {
+    res.status(413).json(fail("PAYLOAD_TOO_LARGE", "The request body is too large."));
+    return;
+  }
+  if (bodyError?.type === "entity.parse.failed") {
     res.status(400).json(fail("BAD_JSON", "The request body is not valid JSON."));
     return;
   }
