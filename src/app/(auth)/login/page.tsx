@@ -108,7 +108,7 @@ function LoginForm() {
               type="button"
               onClick={() => setShowPassword((value) => !value)}
               aria-pressed={showPassword}
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs text-secondary hover:text-body"
+              className="absolute right-1 top-1/2 min-h-11 -translate-y-1/2 rounded-md px-3 text-xs text-secondary hover:text-body"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
@@ -118,7 +118,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm text-on-primary hover:bg-primary-strong disabled:opacity-60"
+          className="w-full min-h-11 rounded-md bg-primary px-4 py-2.5 text-sm text-on-primary hover:bg-primary-strong disabled:opacity-60"
         >
           {submitting ? "Signing in…" : "Sign in"}
         </button>

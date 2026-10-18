@@ -15,9 +15,11 @@ const variants: Record<Variant, string> = {
   danger: "border border-danger bg-surface text-danger hover:bg-danger hover:text-on-primary",
 };
 
+// `sm` is for dense toolbars; `md` keeps a 44px touch target on phones
+// (Design.md §5) while staying compact from the `sm` breakpoint up.
 const sizes: Record<Size, string> = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-4 py-2 text-sm",
+  sm: "px-3 py-1.5 text-sm min-h-9",
+  md: "px-4 py-2 text-sm min-h-11 sm:min-h-0",
 };
 
 export function Button({

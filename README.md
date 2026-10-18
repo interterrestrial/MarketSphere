@@ -518,7 +518,7 @@ These commands may change as the project configuration evolves.
 | 5     | Order request and confirmation     | Done         |
 | 6     | Notifications                     | Done         |
 | 7     | Admin dashboard and moderation     | Done         |
-| 8     | Testing and pilot launch           | Planned      |
+| 8     | Testing, usability, and pilot launch | Planned    |
 
 The roadmap will be updated as features are implemented and validated.
 
@@ -573,6 +573,8 @@ Additional documentation will be maintained in the `docs/` directory.
 
 | Document                 | Description                                      |
 | ------------------------ | ------------------------------------------------ |
+| `Design-Implementation.md` | Shipped design tokens, components, and deviations |
+| `API-Conventions.md`     | Response envelope, status codes, endpoints      |
 | `PRD.md`                 | Product requirements and MVP scope               |
 | `Design.md`              | UI/UX design principles and specifications       |
 | `System-Architecture.md` | Application architecture and technical decisions |
