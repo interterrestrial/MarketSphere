@@ -1,11 +1,10 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import type { AuthUser } from "@/types/auth";
 import request from "supertest";
 import { db } from "@/lib/db";
 import { SESSION_COOKIE, signSession } from "@/lib/session";
 import app from "@/server/app";
-import {
-  getPlatformStats,
-} from "@/server/services/admin-stats.service";
+import { getPlatformStats } from "@/server/services/admin-stats.service";
 import {
   acceptProposal,
   cancelOrderRequest,
@@ -67,15 +66,49 @@ async function scenario(
   return { seller, buyer, product };
 }
 
+type OrderItemInput = Parameters<typeof submitOrderRequest>[1]["items"][number];
+
+/** One request line. Optional fields must be present (possibly undefined). */
+function line(
+  productId: string,
+  quantity: number,
+  extra: Partial<OrderItemInput> = {}
+): OrderItemInput {
+  return { productId, quantity, variantLabel: undefined, requestedUnitPrice: undefined, ...extra };
+}
+
+type ConfirmedLine = { itemId: string; agreedUnitPrice: string };
+type ProposedLine = { itemId: string; proposedUnitPrice: string; proposedQuantity?: number };
+
+/** Thin wrappers so the tests read as workflow steps. */
+const accept = (seller: AuthUser, id: string, items: ConfirmedLine[], note?: string) =>
+  acceptOrderRequest(seller, id, { items, note });
+const propose = (seller: AuthUser, id: string, items: ProposedLine[], note?: string) =>
+  proposeOrderChanges(seller, id, { items, note });
+
+/** A full product-search query; unset filters are passed as undefined. */
+const search = () =>
+  searchProducts({
+    q: undefined,
+    category: undefined,
+    minPrice: undefined,
+    maxPrice: undefined,
+    sellerCity: undefined,
+    availability: "any",
+    sort: "newest",
+    page: 1,
+    pageSize: 12,
+  });
+
+const submit = (buyer: AuthUser, items: OrderItemInput[], deliveryAddress = ADDRESS) =>
+  submitOrderRequest(buyer, { items, deliveryAddress, buyerNotes: undefined });
+
 async function placeRequest(
   buyer: Awaited<ReturnType<typeof createActiveBuyer>>,
   product: { id: string },
   quantity = 20
 ) {
-  return submitOrderRequest(buyer, {
-    items: [{ productId: product.id, quantity }],
-    deliveryAddress: ADDRESS,
-  });
+  return submit(buyer, [line(product.id, quantity)]);
 }
 
 describe("order request creation", () => {
@@ -131,23 +164,14 @@ describe("order request creation", () => {
     const other = await createApprovedSeller();
     const otherProduct = await createProduct({ sellerId: other.id });
     await expect(
-      submitOrderRequest(buyer, {
-        items: [
-          { productId: product.id, quantity: 20 },
-          { productId: otherProduct.id, quantity: 20 },
-        ],
-        deliveryAddress: ADDRESS,
-      })
+      submit(buyer, [line(product.id, 20), line(otherProduct.id, 20)])
     ).rejects.toMatchObject({ code: "ONE_SELLER_PER_REQUEST" });
   });
 
   it("refuses a variant the listing does not offer", async () => {
     const { buyer, product } = await scenario();
     await expect(
-      submitOrderRequest(buyer, {
-        items: [{ productId: product.id, quantity: 20, variantLabel: "size: Emperor" }],
-        deliveryAddress: ADDRESS,
-      })
+      submit(buyer, [line(product.id, 20, { variantLabel: "size: Emperor" })])
     ).rejects.toMatchObject({
       code: "VALIDATION_ERROR",
       details: [{ path: "items.0.variantLabel" }],
@@ -177,8 +201,9 @@ describe("order request creation", () => {
   it("ignores totals and prices supplied by the client", async () => {
     const { buyer, product } = await scenario();
     const order = await submitOrderRequest(buyer, {
-      items: [{ productId: product.id, quantity: 20, requestedUnitPrice: "1.00" }],
+      items: [line(product.id, 20, { requestedUnitPrice: "1.00" })],
       deliveryAddress: ADDRESS,
+      buyerNotes: undefined,
       // Not part of the schema; nothing client-supplied may set a price.
       agreedTotal: "1.00",
     } as never);
@@ -206,10 +231,12 @@ describe("seller confirmation", () => {
   it("accepts with a final price per line and totals it server-side", async () => {
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product, 20);
-    const accepted = await acceptOrderRequest(seller, order.id, {
-      items: [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }],
-      note: "Confirmed at 950.",
-    });
+    const accepted = await accept(
+      seller,
+      order.id,
+      [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }],
+      "Confirmed at 950."
+    );
 
     expect(accepted.status).toBe("ACCEPTED");
     expect(accepted.confirmed).toBe(true);
@@ -223,21 +250,17 @@ describe("seller confirmation", () => {
   it("insists on a confirmed price for every line", async () => {
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product);
-    await expect(
-      acceptOrderRequest(seller, order.id, { items: [] })
-    ).rejects.toMatchObject({ code: "PRICE_REQUIRED" });
+    await expect(accept(seller, order.id, [])).rejects.toMatchObject({ code: "PRICE_REQUIRED" });
   });
 
   it("rejects a price for a line that is not part of the request", async () => {
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product);
     await expect(
-      acceptOrderRequest(seller, order.id, {
-        items: [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }, {
-          itemId: "00000000-0000-4000-8000-000000000000",
-          agreedUnitPrice: "1.00",
-        }],
-      })
+      accept(seller, order.id, [
+        { itemId: order.items[0]!.id, agreedUnitPrice: "950.00" },
+        { itemId: "00000000-0000-4000-8000-000000000000", agreedUnitPrice: "1.00" },
+      ])
     ).rejects.toMatchObject({ code: "INVALID_ITEM" });
   });
 
@@ -248,9 +271,7 @@ describe("seller confirmation", () => {
     await db.product.update({ where: { id: product.id }, data: { status: "INACTIVE" } });
 
     await expect(
-      acceptOrderRequest(seller, order.id, {
-        items: [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }],
-      })
+      accept(seller, order.id, [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }])
     ).rejects.toMatchObject({ code: "PRODUCT_UNAVAILABLE" });
   });
 
@@ -261,9 +282,7 @@ describe("seller confirmation", () => {
     expect(rejected.status).toBe("REJECTED");
 
     await expect(
-      acceptOrderRequest(seller, order.id, {
-        items: [{ itemId: rejected.items[0]!.id, agreedUnitPrice: "950.00" }],
-      })
+      accept(seller, order.id, [{ itemId: rejected.items[0]!.id, agreedUnitPrice: "950.00" }])
     ).rejects.toMatchObject({ code: "INVALID_TRANSITION" });
     await expect(cancelOrderRequest(buyer, order.id)).rejects.toMatchObject({
       code: "INVALID_TRANSITION",
@@ -275,12 +294,12 @@ describe("proposed changes", () => {
   async function drafted() {
     const base = await scenario();
     const order = await placeRequest(base.buyer, base.product, 40);
-    const proposed = await proposeOrderChanges(base.seller, order.id, {
-      items: [
-        { itemId: order.items[0]!.id, proposedQuantity: 30, proposedUnitPrice: "950.00" },
-      ],
-      note: "Only 30 units from this lot.",
-    });
+    const proposed = await propose(
+      base.seller,
+      order.id,
+      [{ itemId: order.items[0]!.id, proposedQuantity: 30, proposedUnitPrice: "950.00" }],
+      "Only 30 units from this lot."
+    );
     return { ...base, order, proposed };
   }
 
@@ -328,7 +347,6 @@ describe("proposed changes", () => {
     expect(accepted.items[0]!.quantity).toBe(30);
     expect(accepted.items[0]!.agreedUnitPrice).toBe("950");
     // The buyer's original ask is preserved as the request, not overwritten.
-    expect(accepted.proposedQuantity).toBeUndefined();
     expect(accepted.items[0]!.proposedQuantity).toBeNull();
   });
 
@@ -358,9 +376,7 @@ describe("proposed changes", () => {
     const order = await placeRequest(buyer, product);
     const otherSeller = await createApprovedSeller();
     await expect(
-      acceptOrderRequest(otherSeller, order.id, {
-        items: [{ itemId: order.items[0]!.id, agreedUnitPrice: "1.00" }],
-      })
+      accept(otherSeller, order.id, [{ itemId: order.items[0]!.id, agreedUnitPrice: "1.00" }])
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(seller.id).not.toBe(otherSeller.id);
   });
@@ -370,9 +386,7 @@ describe("cancelling and completing", () => {
   it("lets the buyer cancel at any point before terms are agreed", async () => {
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product, 40);
-    await proposeOrderChanges(seller, order.id, {
-      items: [{ itemId: order.items[0]!.id, proposedUnitPrice: "900.00" }],
-    });
+    await propose(seller, order.id, [{ itemId: order.items[0]!.id, proposedUnitPrice: "900.00" }]);
     const cancelled = await cancelOrderRequest(buyer, order.id, "Found locally.");
     expect(cancelled.status).toBe("CANCELLED");
     expect(cancelled.confirmed).toBe(false);
@@ -381,9 +395,9 @@ describe("cancelling and completing", () => {
   it("will not let the buyer cancel after terms are agreed", async () => {
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product);
-    const accepted = await acceptOrderRequest(seller, order.id, {
-      items: [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }],
-    });
+    const accepted = await accept(seller, order.id, [
+      { itemId: order.items[0]!.id, agreedUnitPrice: "950.00" },
+    ]);
     await expect(cancelOrderRequest(buyer, accepted.id)).rejects.toMatchObject({
       code: "INVALID_TRANSITION",
     });
@@ -392,9 +406,9 @@ describe("cancelling and completing", () => {
   it("completes only from an accepted order, and only once", async () => {
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product);
-    const accepted = await acceptOrderRequest(seller, order.id, {
-      items: [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }],
-    });
+    const accepted = await accept(seller, order.id, [
+      { itemId: order.items[0]!.id, agreedUnitPrice: "950.00" },
+    ]);
     const completed = await completeOrderRequest(seller, accepted.id);
     expect(completed.status).toBe("COMPLETED");
     expect(completed.confirmed).toBe(true);
@@ -411,9 +425,9 @@ describe("cancelling and completing", () => {
   it("keeps completion with the seller", async () => {
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product);
-    const accepted = await acceptOrderRequest(seller, order.id, {
-      items: [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }],
-    });
+    const accepted = await accept(seller, order.id, [
+      { itemId: order.items[0]!.id, agreedUnitPrice: "950.00" },
+    ]);
     await expect(completeOrderRequest(buyer, accepted.id)).rejects.toMatchObject({
       code: "ROLE_FORBIDDEN",
     });
@@ -422,11 +436,9 @@ describe("cancelling and completing", () => {
   it("records the whole trail with the actor for each step", async () => {
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product, 40);
-    await proposeOrderChanges(seller, order.id, {
-      items: [
-        { itemId: order.items[0]!.id, proposedQuantity: 30, proposedUnitPrice: "950.00" },
-      ],
-    });
+    await propose(seller, order.id, [
+      { itemId: order.items[0]!.id, proposedQuantity: 30, proposedUnitPrice: "950.00" },
+    ]);
     await sendProposalToBuyer(seller, order.id);
     const accepted = await acceptProposal(buyer, order.id);
     await completeOrderRequest(seller, accepted.id);
@@ -439,9 +451,13 @@ describe("cancelling and completing", () => {
       "ACCEPTED",
       "COMPLETED",
     ]);
-    expect(
-      final.history.map((entry) => entry.changedByRole)
-    ).toEqual(["BUYER", "SELLER", "SELLER", "BUYER", "SELLER"]);
+    expect(final.history.map((entry) => entry.changedByRole)).toEqual([
+      "BUYER",
+      "SELLER",
+      "SELLER",
+      "BUYER",
+      "SELLER",
+    ]);
     expect(final.history.every((entry) => entry.changedByName.length > 0)).toBe(true);
   });
 });
@@ -467,9 +483,7 @@ describe("party isolation", () => {
   it("counts statuses for the dashboard", async () => {
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product);
-    await acceptOrderRequest(seller, order.id, {
-      items: [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }],
-    });
+    await accept(seller, order.id, [{ itemId: order.items[0]!.id, agreedUnitPrice: "950.00" }]);
     await placeRequest(buyer, product, 30);
 
     const { counts, total } = await listOrderRequests(buyer);
@@ -490,9 +504,7 @@ describe("order notifications", () => {
     expect(await unreadCount(seller.id)).toBe(1);
     expect(await unreadCount(buyer.id)).toBe(0);
 
-    await proposeOrderChanges(seller, order.id, {
-      items: [{ itemId: order.items[0]!.id, proposedUnitPrice: "950.00" }],
-    });
+    await propose(seller, order.id, [{ itemId: order.items[0]!.id, proposedUnitPrice: "950.00" }]);
     expect(await unreadCount(buyer.id)).toBe(0);
 
     await sendProposalToBuyer(seller, order.id);
@@ -503,10 +515,7 @@ describe("order notifications", () => {
 
     // The feed is newest-first, so the original request is the oldest entry.
     const sellerFeed = await listNotifications(seller);
-    expect(sellerFeed.items.map((item) => item.type)).toEqual([
-      "ORDER_RESPONSE",
-      "ORDER_REQUEST",
-    ]);
+    expect(sellerFeed.items.map((item) => item.type)).toEqual(["ORDER_RESPONSE", "ORDER_REQUEST"]);
     expect(sellerFeed.items.at(-1)!.title).toContain(order.reference);
     expect(sellerFeed.total).toBe(2);
     expect(sellerFeed.unread).toBe(2);
@@ -549,12 +558,7 @@ describe("catalogue visibility follows account state", () => {
   it("hides listings of sellers who are not approved", async () => {
     const rejected = await createUser({ role: "SELLER", status: "REJECTED" });
     const product = await createProduct({ sellerId: rejected.id });
-    const visible = await searchProducts({
-      page: 1,
-      pageSize: 12,
-      sort: "newest",
-      availability: "any",
-    });
+    const visible = await search();
     expect(visible.total).toBe(0);
     await expect(getVisibleProduct(product.id)).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
@@ -562,10 +566,10 @@ describe("catalogue visibility follows account state", () => {
   it("keeps a suspended seller's listing out of search", async () => {
     const seller = await createApprovedSeller();
     const product = await createProduct({ sellerId: seller.id });
-    expect((await searchProducts({ page: 1, pageSize: 12, sort: "newest", availability: "any" })).total).toBe(1);
+    expect((await search()).total).toBe(1);
 
     await db.user.update({ where: { id: seller.id }, data: { status: "SUSPENDED" } });
-    expect((await searchProducts({ page: 1, pageSize: 12, sort: "newest", availability: "any" })).total).toBe(0);
+    expect((await search()).total).toBe(0);
     await expect(getVisibleProduct(product.id)).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
@@ -582,9 +586,7 @@ describe("platform statistics", () => {
     await createAdmin();
     const { seller, buyer, product } = await scenario();
     const order = await placeRequest(buyer, product);
-    await proposeOrderChanges(seller, order.id, {
-      items: [{ itemId: order.items[0]!.id, proposedUnitPrice: "950.00" }],
-    });
+    await propose(seller, order.id, [{ itemId: order.items[0]!.id, proposedUnitPrice: "950.00" }]);
 
     const stats = await getPlatformStats();
     expect(stats.users.total).toBe(3);
