@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { AdminReportRow } from "@/server/services/admin-report.service";
+import { FormAlert } from "@/components/forms/form-feedback";
 
 /**
  * Report review (FR-45). Every outcome needs a resolution note so the decision
@@ -96,16 +97,8 @@ export function ReportReviewCard({ report }: { report: AdminReportRow }) {
         </p>
       ) : null}
 
-      {error ? (
-        <p role="alert" className="mt-3 text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-      {message ? (
-        <p role="status" className="mt-3 text-sm text-success">
-          {message}
-        </p>
-      ) : null}
+      {error ? <FormAlert tone="error">{error}</FormAlert> : null}
+      {message ? <FormAlert tone="success">{message}</FormAlert> : null}
 
       {reviewed ? null : (
         <div className="mt-4 space-y-3">

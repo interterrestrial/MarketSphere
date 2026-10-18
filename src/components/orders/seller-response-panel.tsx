@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { formatMoney } from "@/lib/format";
 import type { OrderRequestDto } from "@/types/order";
+import { FormAlert } from "@/components/forms/form-feedback";
 
 /**
  * Seller response panel (FR-30 – FR-33, Design.md §7.11).
@@ -95,22 +96,8 @@ export function SellerResponsePanel({ order }: { order: OrderRequestDto }) {
         arranged outside MarketSphere.
       </p>
 
-      {error ? (
-        <p
-          role="alert"
-          className="mt-3 rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
-        >
-          {error}
-        </p>
-      ) : null}
-      {message ? (
-        <p
-          role="status"
-          className="mt-3 rounded-md border border-success bg-success-soft px-3 py-2 text-sm text-success"
-        >
-          {message}
-        </p>
-      ) : null}
+      {error ? <FormAlert tone="error">{error}</FormAlert> : null}
+      {message ? <FormAlert tone="success">{message}</FormAlert> : null}
 
       <div className="mt-4 flex flex-wrap gap-2">
         {(

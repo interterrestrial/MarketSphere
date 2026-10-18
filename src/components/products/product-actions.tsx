@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { FormAlert } from "@/components/forms/form-feedback";
 
 /**
  * Publication controls (Design.md §7.9): saving a draft and publishing a
@@ -73,11 +74,7 @@ export function ProductActions({
           Delete draft
         </Button>
       ) : null}
-      {message ? (
-        <p role="alert" className="text-sm text-danger">
-          {message}
-        </p>
-      ) : null}
+      {message ? <FormAlert tone="error">{message}</FormAlert> : null}
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { FormAlert } from "@/components/forms/form-feedback";
+import { focusFirstInvalidField } from "@/lib/forms";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { formatMoney } from "@/lib/format";
@@ -96,11 +98,13 @@ export function OrderRequestForm({
     return Object.keys(errors).length === 0;
   }
 
-  async function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
     setFormError(null);
     if (!validate()) {
       setFormError("Please fix the highlighted fields.");
+      focusFirstInvalidField(event.currentTarget);
       return;
     }
     setSubmitting(true);
@@ -130,6 +134,7 @@ export function OrderRequestForm({
         setFormError(
           error.fields.length > 0 ? "Please fix the highlighted fields." : error.message
         );
+        focusFirstInvalidField(event.currentTarget);
       } else {
         setFormError("We could not submit your request. Please try again.");
       }
@@ -148,14 +153,7 @@ export function OrderRequestForm({
         </p>
       </div>
 
-      {formError ? (
-        <p
-          role="alert"
-          className="rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
-        >
-          {formError}
-        </p>
-      ) : null}
+      {formError ? <FormAlert tone="error">{formError}</FormAlert> : null}
 
       <section className="space-y-4">
         <h2 className="font-heading text-base text-body">Requested products</h2>

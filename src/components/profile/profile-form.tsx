@@ -4,6 +4,8 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, api } from "@/lib/api-client";
+import { FormAlert } from "@/components/forms/form-feedback";
+import { focusFirstInvalidField } from "@/lib/forms";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import type { BusinessProfileDto, ProfilePayload } from "@/types/business-profile";
 import { BUYER_BUSINESS_TYPES, SELLER_BUSINESS_TYPES } from "@/server/validators/business-profile";
@@ -99,8 +101,9 @@ export function ProfileForm({
     setSaved(false);
   }
 
-  async function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     setFormError(null);
     setSaved(false);
 
@@ -108,6 +111,7 @@ export function ProfileForm({
     setFieldErrors(local);
     if (Object.keys(local).length > 0) {
       setFormError("Please fix the highlighted fields.");
+      focusFirstInvalidField(event.currentTarget);
       return;
     }
 
@@ -139,22 +143,8 @@ export function ProfileForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
-      {formError ? (
-        <p
-          role="alert"
-          className="rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
-        >
-          {formError}
-        </p>
-      ) : null}
-      {saved ? (
-        <p
-          role="status"
-          className="rounded-md border border-success bg-success-soft px-3 py-2 text-sm text-success"
-        >
-          Profile saved.
-        </p>
-      ) : null}
+      {formError ? <FormAlert tone="error">{formError}</FormAlert> : null}
+      {saved ? <FormAlert tone="success">Profile saved.</FormAlert> : null}
 
       <Field id="businessName" label="Business name" error={fieldErrors.businessName}>
         <Input

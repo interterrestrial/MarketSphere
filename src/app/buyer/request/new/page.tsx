@@ -1,11 +1,11 @@
 import { headers } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/app/api/auth/_helpers";
 import { OrderRequestForm } from "@/components/orders/order-request-form";
 import { db } from "@/lib/db";
 import { AppError } from "@/server/middleware/error-handler";
 import { getVisibleProduct } from "@/server/services/product-search.service";
+import { PageShell } from "@/components/layout/page-shell";
 
 /**
  * New request page. Started from a product so the seller is known up front —
@@ -52,22 +52,15 @@ export default async function NewOrderRequestPage({
     : null;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <Link href={`/products/${product.id}`} className="text-sm text-secondary hover:text-primary">
-        ← Back to product
-      </Link>
-      <h1 className="mt-3 font-heading text-2xl text-body">Request an order</h1>
-      <p className="mt-2 text-sm text-secondary">
-        Requesting from {product.seller.businessName}
-        {product.seller.city ? ` · ${product.seller.city}` : ""}
-      </p>
-      <div className="mt-8">
-        <OrderRequestForm
-          initialProduct={product}
-          sellerCatalogue={catalogue}
-          defaultDeliveryAddress={defaultDeliveryAddress}
-        />
-      </div>
-    </main>
+    <PageShell
+      title="Request an order"
+      description={`Requesting from ${product.seller.businessName}${product.seller.city ? ` · ${product.seller.city}` : ""}.`}
+    >
+      <OrderRequestForm
+        initialProduct={product}
+        sellerCatalogue={catalogue}
+        defaultDeliveryAddress={defaultDeliveryAddress}
+      />
+    </PageShell>
   );
 }

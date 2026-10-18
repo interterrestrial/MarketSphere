@@ -9,6 +9,7 @@ import { formatMoney, moqLabel } from "@/lib/format";
 import { ProductStatusBadge } from "@/components/products/product-badges";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { AdminProductRow } from "@/server/services/admin-product.service";
+import { FormAlert } from "@/components/forms/form-feedback";
 
 /**
  * Listing moderation (FR-44). Sellers cannot make their own listings visible,
@@ -84,16 +85,8 @@ export function ProductModerationCard({ product }: { product: AdminProductRow })
         </div>
       </div>
 
-      {error ? (
-        <p role="alert" className="mt-3 text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-      {message ? (
-        <p role="status" className="mt-3 text-sm text-success">
-          {message}
-        </p>
-      ) : null}
+      {error ? <FormAlert tone="error">{error}</FormAlert> : null}
+      {message ? <FormAlert tone="success">{message}</FormAlert> : null}
 
       <div className="mt-4 space-y-3">
         <Field

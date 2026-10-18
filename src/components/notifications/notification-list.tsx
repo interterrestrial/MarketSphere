@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useAuth } from "@/components/auth/auth-provider";
 import type { NotificationDto } from "@/types/notification";
+import { FormAlert } from "@/components/forms/form-feedback";
 
 /**
  * Notification list (FR-39, FR-40, Design.md §7).
@@ -80,14 +81,7 @@ export function NotificationList({
 
   return (
     <>
-      {error ? (
-        <p
-          role="alert"
-          className="mb-3 rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
-        >
-          {error}
-        </p>
-      ) : null}
+      {error ? <FormAlert tone="error">{error}</FormAlert> : null}
 
       <ul className="space-y-3">
         {items.map((notification) => (

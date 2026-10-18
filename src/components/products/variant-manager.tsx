@@ -8,6 +8,7 @@ import { Field, Input } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ProductVariantDto } from "@/types/product";
+import { FormAlert } from "@/components/forms/form-feedback";
 
 /**
  * Variant manager (FR-16): flexible name/value options so one model covers
@@ -88,11 +89,7 @@ export function VariantManager({
       <p className="mt-1 text-xs text-muted">
         Add options such as size, colour, or fabric. Buyers only see available ones.
       </p>
-      {error ? (
-        <p role="alert" className="mt-3 text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
+      {error ? <FormAlert tone="error">{error}</FormAlert> : null}
 
       {variants.length === 0 ? (
         <div className="mt-4">

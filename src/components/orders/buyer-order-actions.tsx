@@ -6,6 +6,7 @@ import { ApiError, api } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { BUYER_CANCELLABLE_STATUSES, type OrderRequestDto } from "@/types/order";
+import { FormAlert } from "@/components/forms/form-feedback";
 
 /**
  * Buyer actions on a request (FR-34, FR-37): accept or decline the seller's
@@ -42,14 +43,7 @@ export function BuyerOrderActions({ order }: { order: OrderRequestDto }) {
   return (
     <section className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
       <h2 className="font-heading text-base text-body">Your response</h2>
-      {error ? (
-        <p
-          role="alert"
-          className="mt-3 rounded-md border border-danger bg-danger-soft px-3 py-2 text-sm text-danger"
-        >
-          {error}
-        </p>
-      ) : null}
+      {error ? <FormAlert tone="error">{error}</FormAlert> : null}
 
       {canRespondToProposal && order.proposalNote ? (
         <p className="mt-2 rounded-md border border-info bg-info-soft px-3 py-2 text-sm text-secondary">

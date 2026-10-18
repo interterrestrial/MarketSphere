@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ProductImageDto } from "@/types/product";
+import { FormAlert } from "@/components/forms/form-feedback";
 
 /**
  * Product image manager. The database only stores references — image files
@@ -65,11 +66,7 @@ export function ImageManager({
       <p className="mt-1 text-xs text-muted">
         Attach public image URLs for now. Direct uploads arrive with the storage integration.
       </p>
-      {error ? (
-        <p role="alert" className="mt-3 text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
+      {error ? <FormAlert tone="error">{error}</FormAlert> : null}
 
       {images.length === 0 ? (
         <div className="mt-4">

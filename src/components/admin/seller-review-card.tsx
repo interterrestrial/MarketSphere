@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type { AdminSellerRow } from "@/server/services/admin-seller.service";
+import { FormAlert } from "@/components/forms/form-feedback";
 
 /**
  * Seller verification review (FR-42, FR-09).
@@ -133,16 +134,8 @@ export function SellerReviewCard({ seller }: { seller: AdminSellerRow }) {
         </p>
       )}
 
-      {error ? (
-        <p role="alert" className="mt-3 text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-      {message ? (
-        <p role="status" className="mt-3 text-sm text-success">
-          {message}
-        </p>
-      ) : null}
+      {error ? <FormAlert tone="error">{error}</FormAlert> : null}
+      {message ? <FormAlert tone="success">{message}</FormAlert> : null}
 
       <div className="mt-4 space-y-3">
         <Field
