@@ -31,6 +31,7 @@ const optionalText = (max: number) =>
     .transform((value) => (value === "" ? undefined : value));
 
 function baseFields(role: ProfileRole) {
+  const isSeller = role === "SELLER";
   return {
     businessName: z
       .string()
@@ -43,7 +44,13 @@ function baseFields(role: ProfileRole) {
           ? "Sellers can register as a manufacturer or wholesaler."
           : "Buyers can register as a retailer, distributor, reseller, or institutional buyer.",
     }),
-    description: optionalText(1000),
+    description: isSeller
+      ? z
+          .string()
+          .trim()
+          .min(10, "Business description must be at least 10 characters.")
+          .max(1000, "Must be 1000 characters or fewer.")
+      : optionalText(1000),
     address: z
       .string()
       .trim()
@@ -55,24 +62,50 @@ function baseFields(role: ProfileRole) {
       .string()
       .trim()
       .regex(/^\d{6}$/, "Enter a valid 6-digit PIN code."),
-    contactName: optionalText(120),
-    contactPhone: z
-      .string()
-      .trim()
-      .regex(/^\+?[0-9][0-9\s-]{5,19}$/, "Enter a valid phone number.")
-      .optional()
-      .transform((value) => (value === "" ? undefined : value)),
-    gstNumber: z
-      .string()
-      .trim()
-      .toUpperCase()
-      .regex(
-        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9]Z[A-Z0-9]$/,
-        "Enter a valid GSTIN (e.g. 06AABCA1234C1Z5)."
-      )
-      .optional()
-      .transform((value) => (value === "" ? undefined : value)),
-    serviceArea: optionalText(200),
+    contactName: isSeller
+      ? z
+          .string()
+          .trim()
+          .min(2, "Contact person name must be at least 2 characters.")
+          .max(120, "Must be 120 characters or fewer.")
+      : optionalText(120),
+    contactPhone: isSeller
+      ? z
+          .string()
+          .trim()
+          .regex(/^\+?[0-9][0-9\s-]{5,19}$/, "Enter a valid phone number.")
+      : z
+          .string()
+          .trim()
+          .regex(/^\+?[0-9][0-9\s-]{5,19}$/, "Enter a valid phone number.")
+          .optional()
+          .transform((value) => (value === "" ? undefined : value)),
+    gstNumber: isSeller
+      ? z
+          .string()
+          .trim()
+          .toUpperCase()
+          .regex(
+            /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9]Z[A-Z0-9]$/,
+            "Enter a valid 15-character GSTIN (e.g. 06AABCA1234C1Z5)."
+          )
+      : z
+          .string()
+          .trim()
+          .toUpperCase()
+          .regex(
+            /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9]Z[A-Z0-9]$/,
+            "Enter a valid GSTIN (e.g. 06AABCA1234C1Z5)."
+          )
+          .optional()
+          .transform((value) => (value === "" ? undefined : value)),
+    serviceArea: isSeller
+      ? z
+          .string()
+          .trim()
+          .min(2, "Service area is required.")
+          .max(200, "Must be 200 characters or fewer.")
+      : optionalText(200),
   };
 }
 

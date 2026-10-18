@@ -35,25 +35,52 @@ export const FIELD_LABELS: Record<string, string> = {
 };
 
 /** Client-side mirror of the server rules for immediate feedback. */
-function localErrors(values: Record<string, string>): Record<string, string> {
+function localErrors(values: Record<string, string>, role: ProfileRole): Record<string, string> {
   const errors: Record<string, string> = {};
   if (values.businessName.trim().length < 2) {
     errors.businessName = "Business name must be at least 2 characters.";
   }
   if (!values.businessType) errors.businessType = "Choose a business type.";
+  if (role === "SELLER") {
+    if (values.description.trim().length < 10) {
+      errors.description = "Business description must be at least 10 characters.";
+    }
+    if (values.serviceArea.trim().length < 2) {
+      errors.serviceArea = "Service area is required.";
+    }
+    if (values.contactName.trim().length < 2) {
+      errors.contactName = "Enter the contact person's name.";
+    }
+    if (!values.contactPhone.trim()) {
+      errors.contactPhone = "Enter a contact phone number.";
+    } else if (!/^\+?[0-9][0-9\s-]{5,19}$/.test(values.contactPhone.trim())) {
+      errors.contactPhone = "Enter a valid phone number.";
+    }
+    if (!values.gstNumber.trim()) {
+      errors.gstNumber = "Enter your 15-character GSTIN.";
+    } else if (
+      !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9]Z[A-Z0-9]$/.test(values.gstNumber.trim().toUpperCase())
+    ) {
+      errors.gstNumber = "Enter a valid GSTIN (e.g. 06AABCA1234C1Z5).";
+    }
+  } else {
+    if (
+      values.contactPhone.trim() &&
+      !/^\+?[0-9][0-9\s-]{5,19}$/.test(values.contactPhone.trim())
+    ) {
+      errors.contactPhone = "Enter a valid phone number.";
+    }
+    if (
+      values.gstNumber.trim() &&
+      !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9]Z[A-Z0-9]$/.test(values.gstNumber.trim().toUpperCase())
+    ) {
+      errors.gstNumber = "Enter a valid GSTIN (e.g. 06AABCA1234C1Z5).";
+    }
+  }
   if (values.address.trim().length < 5) errors.address = "Enter a complete address.";
   if (!values.city.trim()) errors.city = "City is required.";
   if (!values.state.trim()) errors.state = "State is required.";
   if (!/^\d{6}$/.test(values.pincode.trim())) errors.pincode = "Enter a valid 6-digit PIN code.";
-  if (values.contactPhone.trim() && !/^\+?[0-9][0-9\s-]{5,19}$/.test(values.contactPhone.trim())) {
-    errors.contactPhone = "Enter a valid phone number.";
-  }
-  if (
-    values.gstNumber.trim() &&
-    !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9]Z[A-Z0-9]$/.test(values.gstNumber.trim().toUpperCase())
-  ) {
-    errors.gstNumber = "Enter a valid GSTIN (e.g. 06AABCA1234C1Z5).";
-  }
   return errors;
 }
 
@@ -107,7 +134,7 @@ export function ProfileForm({
     setFormError(null);
     setSaved(false);
 
-    const local = localErrors(values);
+    const local = localErrors(values, role);
     setFieldErrors(local);
     if (Object.keys(local).length > 0) {
       setFormError("Please fix the highlighted fields.");
@@ -191,6 +218,7 @@ export function ProfileForm({
         <Textarea
           id="description"
           name="description"
+          required={role === "SELLER"}
           maxLength={1000}
           value={values.description}
           invalid={Boolean(fieldErrors.description)}
@@ -259,10 +287,16 @@ export function ProfileForm({
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="contactName" label="Contact person" error={fieldErrors.contactName} optional>
+        <Field
+          id="contactName"
+          label="Contact person"
+          error={fieldErrors.contactName}
+          optional={role === "BUYER"}
+        >
           <Input
             id="contactName"
             name="contactName"
+            required={role === "SELLER"}
             autoComplete="name"
             value={values.contactName}
             invalid={Boolean(fieldErrors.contactName)}
@@ -273,13 +307,14 @@ export function ProfileForm({
         <Field
           id="contactPhone"
           label="Contact phone"
-          hint="Not shown publicly."
+          hint={role === "SELLER" ? "Direct phone for business enquiries." : "Not shown publicly."}
           error={fieldErrors.contactPhone}
-          optional
+          optional={role === "BUYER"}
         >
           <Input
             id="contactPhone"
             name="contactPhone"
+            required={role === "SELLER"}
             type="tel"
             autoComplete="tel"
             value={values.contactPhone}
@@ -294,13 +329,18 @@ export function ProfileForm({
         <Field
           id="gstNumber"
           label="GSTIN"
-          hint="Optional for now; used when verification opens."
+          hint={
+            role === "SELLER"
+              ? "15-character Goods and Services Tax Identification Number."
+              : "Optional for buyers; used when tax invoicing is needed."
+          }
           error={fieldErrors.gstNumber}
-          optional
+          optional={role === "BUYER"}
         >
           <Input
             id="gstNumber"
             name="gstNumber"
+            required={role === "SELLER"}
             value={values.gstNumber}
             invalid={Boolean(fieldErrors.gstNumber)}
             onChange={(e) => set("gstNumber", e.target.value.toUpperCase())}
@@ -317,6 +357,7 @@ export function ProfileForm({
             <Input
               id="serviceArea"
               name="serviceArea"
+              required
               value={values.serviceArea}
               invalid={Boolean(fieldErrors.serviceArea)}
               onChange={(e) => set("serviceArea", e.target.value)}

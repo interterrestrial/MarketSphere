@@ -52,7 +52,9 @@ function requiredFields(role: ProfileRole): Array<keyof BusinessProfile> {
     "state",
     "pincode",
   ];
-  return role === "SELLER" ? [...common, "description", "serviceArea"] : common;
+  return role === "SELLER"
+    ? [...common, "description", "serviceArea", "contactName", "contactPhone", "gstNumber"]
+    : common;
 }
 
 function isFilled(profile: BusinessProfile, field: keyof BusinessProfile): boolean {
