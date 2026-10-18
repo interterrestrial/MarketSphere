@@ -11,6 +11,8 @@ import type { NextConfig } from "next";
  */
 const isDev = process.env.NODE_ENV !== "production";
 
+const apiOrigin = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
@@ -18,7 +20,7 @@ const contentSecurityPolicy = [
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https:",
   // Product images are seller-supplied https references.
-  `connect-src 'self' http://localhost:3001${isDev ? " ws: wss:" : ""}`,
+  `connect-src 'self' ${apiOrigin}${isDev ? " ws: wss:" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
