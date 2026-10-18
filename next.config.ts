@@ -6,21 +6,24 @@ import type { NextConfig } from "next";
  * The Content-Security-Policy is deliberately restrictive: no inline
  * scripts, no framing, and connections limited to the app's own origin plus
  * the API host. Styles need 'unsafe-inline' because Tailwind and the Next
- * font pipeline inject a <style> tag at runtime.
+ * font pipeline inject a <style> tag at runtime. In development,
+ * 'unsafe-eval' is required for Next.js Fast Refresh and React hydration.
  */
+const isDev = process.env.NODE_ENV !== "production";
+
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https:",
   // Product images are seller-supplied https references.
-  "connect-src 'self' http://localhost:3001",
+  `connect-src 'self' http://localhost:3001${isDev ? " ws: wss:" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  "upgrade-insecure-requests",
+  ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const securityHeaders = [

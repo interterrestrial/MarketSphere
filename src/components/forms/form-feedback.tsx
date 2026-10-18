@@ -57,7 +57,7 @@ export function useFormSubmit(
       requestAnimationFrame(() => {
         const invalid = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
         invalid?.focus();
-        invalid?.scrollIntoView({ block: "center", behavior: "smooth" });
+        invalid?.scrollIntoView?.({ block: "center", behavior: "smooth" });
       });
       return;
     }

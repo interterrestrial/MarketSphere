@@ -15,7 +15,7 @@ export function focusFirstInvalidField(form: HTMLFormElement | null): void {
   requestAnimationFrame(() => {
     const invalid = form.querySelector<HTMLElement>('[aria-invalid="true"]');
     invalid?.focus();
-    invalid?.scrollIntoView({ block: "center", behavior: "smooth" });
+    invalid?.scrollIntoView?.({ block: "center", behavior: "smooth" });
   });
 }
 

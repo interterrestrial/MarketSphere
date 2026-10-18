@@ -23,6 +23,11 @@ const config: Config = {
         warning: "var(--color-warning)",
         danger: "var(--color-danger)",
         info: "var(--color-info)",
+        "success-soft": "var(--color-success-soft)",
+        "warning-soft": "var(--color-warning-soft)",
+        "danger-soft": "var(--color-danger-soft)",
+        "info-soft": "var(--color-info-soft)",
+        "neutral-soft": "var(--color-neutral-soft)",
       },
       fontFamily: {
         heading: ["var(--font-heading)"],
