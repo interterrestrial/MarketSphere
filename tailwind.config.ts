@@ -1,9 +1,9 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Tailwind theme wired to the Design.md tokens (dark business-tool theme).
+ * Tailwind theme wired to the Design.md tokens (light business-tool theme).
  * Utilities: bg-background, bg-surface, text-muted, border-subtle,
- * text-primary, font-heading, font-mono, …
+ * text-primary, text-on-primary, font-heading, font-mono, …
  */
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
@@ -15,6 +15,8 @@ const config: Config = {
         muted: "var(--color-text-muted)",
         subtle: "var(--color-border)",
         primary: "var(--color-primary)",
+        "primary-strong": "var(--color-primary-strong)",
+        "on-primary": "var(--color-on-primary)",
         body: "var(--color-text)",
         secondary: "var(--color-text-secondary)",
         success: "var(--color-success)",
@@ -31,6 +33,9 @@ const config: Config = {
         sm: "var(--radius-sm)",
         md: "var(--radius-md)",
         lg: "var(--radius-lg)",
+      },
+      boxShadow: {
+        panel: "var(--shadow-panel)",
       },
     },
   },

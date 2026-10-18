@@ -10,7 +10,7 @@ export default function Home() {
         before any order is accepted.
       </p>
       <div className="mt-6 flex gap-3">
-        <Link href="/register" className="rounded-md bg-primary px-4 py-2 text-sm text-background">
+        <Link href="/register" className="rounded-md bg-primary px-4 py-2 text-sm text-on-primary">
           Join as a seller or buyer
         </Link>
         <Link

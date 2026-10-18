@@ -18,6 +18,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
+    "check:contrast": "node tools/check-contrast.mjs",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",

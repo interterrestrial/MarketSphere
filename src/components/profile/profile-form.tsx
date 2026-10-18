@@ -336,7 +336,7 @@ export function ProfileForm({
       <button
         type="submit"
         disabled={saving}
-        className="rounded-md bg-primary px-4 py-2 text-sm text-background disabled:opacity-60"
+        className="rounded-md bg-primary px-4 py-2 text-sm text-on-primary disabled:opacity-60"
       >
         {saving ? "Saving…" : isCreate ? "Create business profile" : "Save changes"}
       </button>

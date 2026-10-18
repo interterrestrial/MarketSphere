@@ -40,7 +40,7 @@ export function ProductFilters({
           placeholder="Search products, e.g. bedsheet"
           className={`min-w-56 flex-1 ${inputClass}`}
         />
-        <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-background">
+        <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm text-on-primary">
           Search
         </button>
       </div>

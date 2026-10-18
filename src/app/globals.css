@@ -5,29 +5,70 @@
 /*
  * Design.md token layer. Components use Tailwind utilities (bg-background,
  * bg-surface, …) that read these variables — never raw hex in components.
+ *
+ * Palette note (Phase 8): MarketSphere ships a light interface for daytime
+ * trade use. Typeface families are unchanged from Design.md (Varela Round for
+ * headings, Varela for body, Space Mono for codes); only the colour values
+ * were re-derived so every text/background pair clears WCAG AA on a light
+ * canvas. Ratios are verified by tools/check-contrast.mjs.
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --color-bg: #1b1c1e;
-  --color-surface: #333333;
-  --color-text-muted: #9598a0;
-  --color-border: #242528;
-  --color-primary: #67a6ea;
+  /* Surfaces */
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-border: #e2e5ea;
 
-  --color-text: #f3f4f6;
-  --color-text-secondary: #c5c7cc;
-  --color-success: #4fb477;
-  --color-warning: #e7b45b;
-  --color-danger: #e36b6b;
-  --color-info: #67a6ea;
+  /* Text */
+  --color-text: #14181f;
+  --color-text-secondary: #414a57;
+  --color-text-muted: #5c6673;
+
+  /* Brand + status */
+  --color-primary: #1b6aa8;
+  --color-primary-strong: #145685;
+  --color-on-primary: #ffffff;
+  --color-success: #12703f;
+  --color-warning: #8a5800;
+  --color-danger: #b3261e;
+  --color-info: #1b6aa8;
 
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
+
+  --shadow-panel: 0 1px 2px rgb(16 24 40 / 0.04), 0 8px 24px rgb(16 24 40 / 0.06);
 }
 
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Visible keyboard focus everywhere (Design.md §10). Only shown for keyboard
+ * users, so pointer interaction stays clean.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+/* Motion is decorative only; honour the user's system preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

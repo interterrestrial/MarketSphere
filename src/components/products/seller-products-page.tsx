@@ -30,7 +30,7 @@ export function SellerProductsView({ user, items, total }: SellerProductsViewPro
         </div>
         <Link
           href="/seller/products/new"
-          className="rounded-md bg-primary px-4 py-2 text-sm text-background"
+          className="rounded-md bg-primary px-4 py-2 text-sm text-on-primary"
         >
           Add product
         </Link>
@@ -51,7 +51,7 @@ export function SellerProductsView({ user, items, total }: SellerProductsViewPro
             action={
               <Link
                 href="/seller/products/new"
-                className="rounded-md bg-primary px-4 py-2 text-sm text-background"
+                className="rounded-md bg-primary px-4 py-2 text-sm text-on-primary"
               >
                 Add your first product
               </Link>

@@ -46,7 +46,7 @@ export function NotificationIndicator() {
         <span className="absolute bottom-0 left-1/2 h-2 w-3 -translate-x-1/2 rounded-b-full border-2 border-current border-t-0" />
       </span>
       {unread > 0 ? (
-        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-background">
+        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-on-primary">
           {unread > 9 ? "9+" : unread}
         </span>
       ) : null}

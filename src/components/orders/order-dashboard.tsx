@@ -70,7 +70,7 @@ export function OrderDashboard({
               viewerRole === "BUYER" ? (
                 <Link
                   href="/products"
-                  className="rounded-md bg-primary px-4 py-2 text-sm text-background"
+                  className="rounded-md bg-primary px-4 py-2 text-sm text-on-primary"
                 >
                   Explore products
                 </Link>
