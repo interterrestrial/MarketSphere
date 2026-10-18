@@ -26,7 +26,10 @@ const mono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MarketSphere",
+  title: {
+    default: "MarketSphere",
+    template: "%s · MarketSphere",
+  },
   description: "A B2B marketplace connecting micro and small enterprises with business buyers",
 };
 
@@ -38,8 +41,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   return (
     <html lang="en" className={`${heading.variable} ${body.variable} ${mono.variable}`}>
-      <body className="font-sans">
+      <body className="min-h-screen font-sans">
         <AuthProvider initialUser={user} initialUnread={unread}>
+          {/* First tab stop: lets keyboard users bypass the navigation. */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-30 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-on-primary"
+          >
+            Skip to main content
+          </a>
           <Header />
           {children}
         </AuthProvider>

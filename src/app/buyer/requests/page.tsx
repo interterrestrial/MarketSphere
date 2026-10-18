@@ -4,6 +4,7 @@ import type { RequestStatus } from "@prisma/client";
 import { currentUser } from "@/app/api/auth/_helpers";
 import { OrderDashboard } from "@/components/orders/order-dashboard";
 import { listOrderRequests } from "@/server/services/order.service";
+import { PageShell } from "@/components/layout/page-shell";
 
 /** Buyer order request dashboard (Design.md §7.3). */
 export default async function BuyerRequestsPage({
@@ -21,12 +22,13 @@ export default async function BuyerRequestsPage({
   const { items, counts } = await listOrderRequests(user, { status, pageSize: 50 });
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="font-heading text-2xl text-body">Your order requests</h1>
-      <p className="mt-1 text-sm text-secondary">
-        A request is not an order until the seller confirms it and you accept the agreed terms.
-      </p>
+    <PageShell
+      title="Your order requests"
+      description={
+        <>A request is not an order until the seller confirms it and you accept the agreed terms.</>
+      }
+    >
       <OrderDashboard items={items} counts={counts} viewerRole="BUYER" basePath="/buyer/requests" />
-    </main>
+    </PageShell>
   );
 }

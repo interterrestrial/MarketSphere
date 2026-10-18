@@ -4,6 +4,7 @@ import { requireAdminPage } from "@/components/admin/admin-page-parts";
 import { SellerReviewCard } from "@/components/admin/seller-review-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listSellersForReview } from "@/server/services/admin-seller.service";
+import { PageShell } from "@/components/layout/page-shell";
 
 const FILTERS: Array<{ value?: VerificationStatus; label: string }> = [
   { label: "Awaiting review", value: "PENDING" },
@@ -26,13 +27,15 @@ export default async function AdminVerificationsPage({
   const { items, total } = await listSellersForReview({ status, pageSize: 50 });
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="font-heading text-2xl text-body">Seller verification</h1>
-      <p className="mt-1 text-sm text-secondary">
-        Check the business details a seller submitted. Approval lets them submit listings for
-        review; it is not an endorsement of product quality.
-      </p>
-
+    <PageShell
+      title="Seller verification"
+      description={
+        <>
+          Check the business details a seller submitted. Approval lets them submit listings for
+          review; it is not an endorsement of product quality.
+        </>
+      }
+    >
       <div className="mt-6 flex flex-wrap gap-2">
         {FILTERS.map((filter) => (
           <Link
@@ -71,6 +74,6 @@ export default async function AdminVerificationsPage({
           ))}
         </ul>
       )}
-    </main>
+    </PageShell>
   );
 }

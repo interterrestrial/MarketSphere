@@ -7,6 +7,7 @@ import {
 } from "@/components/admin/admin-page-parts";
 import { listAuditEntries } from "@/server/services/admin-core";
 import { getPlatformStats } from "@/server/services/admin-stats.service";
+import { PageShell } from "@/components/layout/page-shell";
 
 /**
  * Admin dashboard (FR-41, Design.md §7.12): what needs attention first, then
@@ -18,12 +19,13 @@ export default async function AdminPage() {
   const [stats, audit] = await Promise.all([getPlatformStats(), listAuditEntries({ pageSize: 8 })]);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="font-heading text-2xl text-body">Platform overview</h1>
-      <p className="mt-1 text-sm text-secondary">
-        Approve sellers, moderate listings, and handle reports. Every decision is recorded.
-      </p>
-
+    <PageShell
+      title="Platform overview"
+      width="wide"
+      description={
+        <>Approve sellers, moderate listings, and handle reports. Every decision is recorded.</>
+      }
+    >
       <section className="mt-6">
         <h2 className="font-heading text-base text-body">Needs attention</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -103,6 +105,6 @@ export default async function AdminPage() {
           </ul>
         )}
       </section>
-    </main>
+    </PageShell>
   );
 }

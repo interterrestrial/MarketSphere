@@ -4,6 +4,7 @@ import { requireAdminPage } from "@/components/admin/admin-page-parts";
 import { UserBadges, UserStatusActions } from "@/components/admin/user-status-actions";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listUsers } from "@/server/services/admin-user.service";
+import { PageShell } from "@/components/layout/page-shell";
 
 const ROLE_FILTERS: Array<{ value?: UserRole; label: string }> = [
   { label: "All roles" },
@@ -44,13 +45,16 @@ export default async function AdminUsersPage({
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="font-heading text-2xl text-body">User management</h1>
-      <p className="mt-1 text-sm text-secondary">
-        Suspension takes effect immediately, including for a signed-in user, and hides a
-        seller&apos;s live listings.
-      </p>
-
+    <PageShell
+      title="User management"
+      width="wide"
+      description={
+        <>
+          Suspension takes effect immediately, including for a signed-in user, and hides a seller’s
+          live listings.
+        </>
+      }
+    >
       <div className="mt-6 flex flex-wrap gap-4">
         <div className="flex flex-wrap gap-2">
           {ROLE_FILTERS.map((filter) => (
@@ -125,6 +129,6 @@ export default async function AdminUsersPage({
           ))}
         </ul>
       )}
-    </main>
+    </PageShell>
   );
 }

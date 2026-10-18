@@ -4,6 +4,7 @@ import { requireAdminPage } from "@/components/admin/admin-page-parts";
 import { ReportReviewCard } from "@/components/admin/report-review-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listReports } from "@/server/services/admin-report.service";
+import { PageShell } from "@/components/layout/page-shell";
 
 const FILTERS: Array<{ value?: ReportStatus; label: string }> = [
   { value: "OPEN", label: "Open" },
@@ -26,12 +27,12 @@ export default async function AdminReportsPage({
   const { items, total } = await listReports({ status, pageSize: 50 });
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="font-heading text-2xl text-body">Reports</h1>
-      <p className="mt-1 text-sm text-secondary">
-        Complaints from buyers and sellers. Record what was done so the outcome is on record.
-      </p>
-
+    <PageShell
+      title="Reports"
+      description={
+        <>Complaints from buyers and sellers. Record what was done so the outcome is on record.</>
+      }
+    >
       <div className="mt-6 flex flex-wrap gap-2">
         {FILTERS.map((filter) => (
           <Link
@@ -68,6 +69,6 @@ export default async function AdminReportsPage({
           ))}
         </ul>
       )}
-    </main>
+    </PageShell>
   );
 }

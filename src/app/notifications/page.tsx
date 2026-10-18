@@ -5,6 +5,7 @@ import { currentUser } from "@/app/api/auth/_helpers";
 import { MarkAllReadButton } from "@/components/notifications/mark-all-read-button";
 import { NotificationList } from "@/components/notifications/notification-list";
 import { listNotifications } from "@/server/services/notification.service";
+import { PageShell } from "@/components/layout/page-shell";
 
 /** Notification centre for buyers and sellers (FR-40). */
 export default async function NotificationsPage({
@@ -26,28 +27,23 @@ export default async function NotificationsPage({
   const viewerRole = user.role === "SELLER" ? "SELLER" : "BUYER";
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl text-body">Notifications</h1>
-          <p className="mt-1 text-sm text-secondary">
-            {unread > 0 ? `${unread} unread` : "You are all caught up"}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+    <PageShell
+      width="narrow"
+      title="Notifications"
+      description={unread > 0 ? `${unread} unread` : "You are all caught up"}
+      actions={
+        <>
           <Link
             href={unreadOnly ? "/notifications" : "/notifications?filter=unread"}
-            className="rounded-md border border-subtle px-3 py-1.5 text-sm text-secondary hover:text-body"
+            className="rounded-md border border-subtle bg-surface px-3 py-1.5 text-sm text-secondary hover:border-primary hover:text-body"
           >
             {unreadOnly ? "Show all" : "Show unread"}
           </Link>
           {unread > 0 ? <MarkAllReadButton /> : null}
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <NotificationList initialItems={items} viewerRole={viewerRole} unreadOnly={unreadOnly} />
-      </div>
-    </main>
+        </>
+      }
+    >
+      <NotificationList initialItems={items} viewerRole={viewerRole} unreadOnly={unreadOnly} />
+    </PageShell>
   );
 }

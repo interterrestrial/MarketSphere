@@ -4,6 +4,7 @@ import { requireAdminPage } from "@/components/admin/admin-page-parts";
 import { ProductModerationCard } from "@/components/admin/product-moderation-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listProductsForModeration } from "@/server/services/admin-product.service";
+import { PageShell } from "@/components/layout/page-shell";
 
 const FILTERS: Array<{ value: ProductStatus; label: string }> = [
   { value: "PENDING_REVIEW", label: "Awaiting review" },
@@ -27,13 +28,15 @@ export default async function AdminProductsPage({
   const { items, total } = await listProductsForModeration({ status, pageSize: 50 });
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="font-heading text-2xl text-body">Listing moderation</h1>
-      <p className="mt-1 text-sm text-secondary">
-        Listings only become visible to buyers after approval. Rejections tell the seller exactly
-        what to change.
-      </p>
-
+    <PageShell
+      title="Listing moderation"
+      description={
+        <>
+          Listings only become visible to buyers after approval. Rejections tell the seller exactly
+          what to change.
+        </>
+      }
+    >
       <div className="mt-6 flex flex-wrap gap-2">
         {FILTERS.map((filter) => (
           <Link
@@ -78,6 +81,6 @@ export default async function AdminProductsPage({
           ))}
         </ul>
       )}
-    </main>
+    </PageShell>
   );
 }
