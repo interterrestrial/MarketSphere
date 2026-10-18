@@ -18,24 +18,47 @@ import {
  * always writes a history entry. Business rules stay in the public services.
  */
 
-export type RequestRow = Prisma.OrderRequestGetPayload<{
-  include: {
-    items: { include: { product: { select: { name: true; status: true } } } };
-    statusHistory: { include: { changedBy: { select: { name: true; role: true } } } };
-    buyer: { include: { businessProfile: { select: { businessName: true; city: true } } } };
-    seller: { include: { businessProfile: { select: { businessName: true; city: true } } } };
-  };
-}>;
-
 export const REQUEST_INCLUDE = {
   items: { include: { product: { select: { name: true, status: true } } }, orderBy: { id: "asc" } },
   statusHistory: {
     include: { changedBy: { select: { name: true, role: true } } },
     orderBy: { createdAt: "asc" },
   },
-  buyer: { include: { businessProfile: { select: { businessName: true, city: true } } } },
-  seller: { include: { businessProfile: { select: { businessName: true, city: true } } } },
+  buyer: {
+    include: {
+      businessProfile: {
+        select: {
+          businessName: true,
+          contactName: true,
+          contactPhone: true,
+          address: true,
+          city: true,
+          state: true,
+          pincode: true,
+        },
+      },
+    },
+  },
+  seller: {
+    include: {
+      businessProfile: {
+        select: {
+          businessName: true,
+          contactName: true,
+          contactPhone: true,
+          address: true,
+          city: true,
+          state: true,
+          pincode: true,
+        },
+      },
+    },
+  },
 } satisfies Prisma.OrderRequestInclude;
+
+export type RequestRow = Prisma.OrderRequestGetPayload<{
+  include: typeof REQUEST_INCLUDE;
+}>;
 
 /** Line-level term update applied atomically with the status transition. */
 export interface ItemUpdate {
@@ -109,14 +132,28 @@ export function toDto(row: RequestRow, viewer?: AuthUser): OrderRequestDto {
     buyer: {
       id: row.buyer.id,
       name: row.buyer.name,
+      email: row.buyer.email,
+      phone: row.buyer.phone,
       businessName: row.buyer.businessProfile?.businessName ?? null,
+      contactName: row.buyer.businessProfile?.contactName ?? row.buyer.name,
+      contactPhone: row.buyer.businessProfile?.contactPhone ?? row.buyer.phone,
       city: row.buyer.businessProfile?.city ?? null,
+      state: row.buyer.businessProfile?.state ?? null,
+      address: row.buyer.businessProfile?.address ?? null,
+      pincode: row.buyer.businessProfile?.pincode ?? null,
     },
     seller: {
       id: row.seller.id,
       name: row.seller.name,
+      email: row.seller.email,
+      phone: row.seller.phone,
       businessName: row.seller.businessProfile?.businessName ?? null,
+      contactName: row.seller.businessProfile?.contactName ?? row.seller.name,
+      contactPhone: row.seller.businessProfile?.contactPhone ?? row.seller.phone,
       city: row.seller.businessProfile?.city ?? null,
+      state: row.seller.businessProfile?.state ?? null,
+      address: row.seller.businessProfile?.address ?? null,
+      pincode: row.seller.businessProfile?.pincode ?? null,
     },
     proposalNote: proposalEntry?.note ?? null,
     history: row.statusHistory.map((entry) => ({

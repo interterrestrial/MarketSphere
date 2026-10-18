@@ -36,8 +36,15 @@ export interface OrderHistoryEntryDto {
 export interface OrderPartyDto {
   id: string;
   name: string;
+  email: string | null;
+  phone: string | null;
   businessName: string | null;
+  contactName: string | null;
+  contactPhone: string | null;
   city: string | null;
+  state: string | null;
+  address: string | null;
+  pincode: string | null;
 }
 
 export interface OrderRequestDto {

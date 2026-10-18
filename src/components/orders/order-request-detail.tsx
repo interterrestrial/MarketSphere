@@ -151,6 +151,74 @@ export function OrderRequestDetail({
           </section>
 
           <section className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
+            <h2 className="font-heading text-base text-body">
+              {isSeller ? "Buyer" : "Seller"} contact details
+            </h2>
+            <dl className="mt-2">
+              <Row
+                label="Business"
+                value={
+                  (isSeller ? order.buyer : order.seller).businessName ??
+                  (isSeller ? order.buyer.name : order.seller.name)
+                }
+              />
+              <Row
+                label="Contact person"
+                value={
+                  (isSeller ? order.buyer : order.seller).contactName ??
+                  (isSeller ? order.buyer.name : order.seller.name)
+                }
+              />
+              {((isSeller ? order.buyer : order.seller).contactPhone ??
+              (isSeller ? order.buyer : order.seller).phone) ? (
+                <div className="flex justify-between gap-4 border-b border-subtle py-2 text-sm last:border-b-0">
+                  <dt className="text-muted">Phone</dt>
+                  <dd className="text-right">
+                    <a
+                      href={`tel:${
+                        (isSeller ? order.buyer : order.seller).contactPhone ??
+                        (isSeller ? order.buyer : order.seller).phone
+                      }`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {(isSeller ? order.buyer : order.seller).contactPhone ??
+                        (isSeller ? order.buyer : order.seller).phone}
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
+              {(isSeller ? order.buyer : order.seller).email ? (
+                <div className="flex justify-between gap-4 border-b border-subtle py-2 text-sm last:border-b-0">
+                  <dt className="text-muted">Email</dt>
+                  <dd className="text-right">
+                    <a
+                      href={`mailto:${(isSeller ? order.buyer : order.seller).email}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {(isSeller ? order.buyer : order.seller).email}
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
+              {(isSeller ? order.buyer : order.seller).city ||
+              (isSeller ? order.buyer : order.seller).state ? (
+                <Row
+                  label="Location"
+                  value={[
+                    (isSeller ? order.buyer : order.seller).city,
+                    (isSeller ? order.buyer : order.seller).state,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                />
+              ) : null}
+              {!isSeller && order.seller.address ? (
+                <Row label="Business address" value={order.seller.address} />
+              ) : null}
+            </dl>
+          </section>
+
+          <section className="rounded-lg border border-subtle bg-surface p-4 shadow-panel">
             <h2 className="font-heading text-base text-body">History</h2>
             <div className="mt-3">
               <OrderTimeline history={order.history} />
