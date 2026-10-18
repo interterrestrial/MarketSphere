@@ -11,8 +11,10 @@
 /out/
 
 # production
-/build
 /dist
+
+# electron-builder output
+/release
 
 # misc
 .DS_Store
@@ -37,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated electron preload bundle
+/electron/dist/

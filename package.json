@@ -11,8 +11,8 @@
     "server": "ts-node --compilerOptions '{\"module\":\"commonjs\"}' src/server/index.ts",
     "server:watch": "ts-node --watch --compilerOptions '{\"module\":\"commonjs\"}' src/server/index.ts",
     "dev:all": "concurrently \"next dev\" \"npm run server:watch\"",
-    "electron:dev": "concurrently \"next dev\" \"wait-on tcp:3000 && electron .\"",
-    "electron:build": "next build && electron-builder",
+    "electron:dev": "concurrently \"next dev\" \"npm run electron:bundle && wait-on tcp:3000 && electron .\"",
+    "electron:build": "npm run electron:bundle && electron-builder --mac dmg --arm64 && electron-builder --mac dmg --x64",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -29,7 +29,12 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:seed": "ts-node --compilerOptions '{\"module\":\"commonjs\"}' prisma/seed.ts",
-    "admin:create": "ts-node --compilerOptions '{\"module\":\"commonjs\"}' scripts/create-admin.ts"
+    "admin:create": "ts-node --compilerOptions '{\"module\":\"commonjs\"}' scripts/create-admin.ts",
+    "electron:start": "electron .",
+    "electron:pack": "npm run electron:bundle && electron-builder --dir",
+    "electron:icon": "node tools/make-icon.mjs",
+    "electron:verify": "./scripts/verify-desktop-build.sh",
+    "electron:bundle": "node tools/build-preload.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
@@ -43,6 +48,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@electron/notarize": "^2.5.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
@@ -56,6 +62,7 @@
     "concurrently": "^9.1.2",
     "electron": "^35.0.0",
     "electron-builder": "^25.1.8",
+    "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.2.1",
     "jsdom": "^29.1.1",
@@ -68,5 +75,70 @@
     "typescript": "^5.8.2",
     "vitest": "^5.0.5",
     "wait-on": "^8.0.3"
+  },
+  "build": {
+    "appId": "in.marketsphere.desktop",
+    "productName": "MarketSphere",
+    "copyright": "Copyright (c) 2026 MarketSphere",
+    "directories": {
+      "output": "release",
+      "buildResources": "packaging"
+    },
+    "files": [
+      "electron/main.js",
+      "electron/preload.js",
+      "electron/dist/preload.js",
+      "electron/lib/navigation-policy.js",
+      "package.json",
+      "!node_modules/**/*",
+      "!.env",
+      "!.env.*"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js",
+      "dependencies": null,
+      "devDependencies": {}
+    },
+    "asar": true,
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.business",
+      "icon": "packaging/icon.icns",
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "packaging/entitlements.mac.plist",
+      "entitlementsInherit": "packaging/entitlements.mac.plist"
+    },
+    "afterSign": "packaging/notarize.js",
+    "dmg": {
+      "title": "${productName} ${version}",
+      "backgroundColor": "#f6f7f9",
+      "contents": [
+        {
+          "x": 140,
+          "y": 200,
+          "type": "file"
+        },
+        {
+          "x": 400,
+          "y": 200,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  },
+  "author": {
+    "name": "MarketSphere",
+    "email": "ops@marketsphere.in"
   }
 }

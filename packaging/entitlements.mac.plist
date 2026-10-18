@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  MarketSphere desktop — hardened runtime entitlements.
+
+  Deliberately minimal. The app is a window onto the web application: it needs
+  outgoing network access (to reach the marketplace) and nothing else. In
+  particular there is no camera, microphone, location, or file-access
+  entitlement, because the marketplace does not use those capabilities.
+-->
+<plist version="1.0">
+  <dict>
+    <!-- Electron requires this to enable the hardened runtime JIT. -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+
+    <!-- Outbound HTTPS to the marketplace is the only network need. -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+  </dict>
+</plist>
