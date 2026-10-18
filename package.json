@@ -23,7 +23,7 @@
     "test:integration": "vitest run --project integration",
     "test:frontend": "vitest run --project frontend",
     "test:watch": "vitest",
-    "test:db:setup": "prisma migrate deploy",
+    "test:db:setup": "node tests/db-setup.mjs",
     "check:contrast": "node tools/check-contrast.mjs",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
