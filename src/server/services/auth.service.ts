@@ -8,6 +8,18 @@ import type { LoginInput, RegisterInput } from "../validators/auth";
 
 type UserRow = Prisma.UserGetPayload<true>;
 
+/**
+ * Canonical email form.
+ *
+ * Normalisation is enforced here as well as in the request schema, because
+ * these services are also called from scripts and tests. Without it, the
+ * database would treat `Buyer@Example.com` and `buyer@example.com` as two
+ * different accounts.
+ */
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 /** Strips credentials; every auth response must go through this. */
 export function toPublicUser(user: UserRow): AuthUser {
   return {
@@ -28,14 +40,15 @@ export function toPublicUser(user: UserRow): AuthUser {
  * - Sellers start PENDING until an administrator approves them (FR-09).
  */
 export async function registerUser(input: RegisterInput): Promise<AuthUser> {
-  const existing = await db.user.findUnique({ where: { email: input.email } });
+  const email = normalizeEmail(input.email);
+  const existing = await db.user.findUnique({ where: { email } });
   if (existing) {
     throw new AppError(409, "CONFLICT", "An account with this email already exists.");
   }
   const user = await db.user.create({
     data: {
       name: input.name,
-      email: input.email,
+      email,
       phone: input.phone,
       passwordHash: await hashPassword(input.password),
       role: input.role,
@@ -63,7 +76,7 @@ export async function registerUser(input: RegisterInput): Promise<AuthUser> {
  * can explain the state instead of showing a generic failure.
  */
 export async function authenticateUser(input: LoginInput): Promise<AuthUser> {
-  const user = await db.user.findUnique({ where: { email: input.email } });
+  const user = await db.user.findUnique({ where: { email: normalizeEmail(input.email) } });
   if (!user || !(await verifyPassword(input.password, user.passwordHash))) {
     throw new AppError(401, "INVALID_CREDENTIALS", "Email or password is incorrect.");
   }
