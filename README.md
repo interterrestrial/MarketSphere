@@ -8,7 +8,7 @@ The initial version focuses on **home textiles and home furnishings**, connectin
 
 The platform uses an order-request model in which buyers submit requests and sellers confirm availability, pricing, quantity, and delivery terms before accepting an order.
 
-> **Project Status:** Feature-complete MVP. Phases 0–11 done. The macOS desktop shell builds and is hardened, but every build is ad-hoc signed and **not yet distributable** — see [Desktop App](docs/Desktop-App.md).
+> **Project Status:** Feature-complete MVP. Phases 0–11 done. The macOS desktop shell builds as an unsigned student/demo DMG — see [Desktop App](docs/Desktop-App.md).
 > **Initial Category:** Home Textiles & Home Furnishings
 > **Seller Region:** Sonipat, Haryana, India
 > **Buyer Region:** Delhi-NCR, India
@@ -511,9 +511,12 @@ Node integration off, the sandbox on, and the preload exposes a single frozen
 object with four keys. This is verified against the real binary, not just
 asserted in tests.
 
-**Both builds are ad-hoc signed.** Shipping to users needs an Apple Developer
-ID certificate and notarization credentials — see
-[docs/Desktop-App.md](docs/Desktop-App.md) for the variables and checklist.
+**The student/demo builds are intentionally unsigned.** This avoids requiring
+an Apple Developer account, but macOS will show a Gatekeeper warning the first
+time another person opens the app. They should right-click the app, choose
+**Open**, and confirm once. A public release with no warning still needs a
+Developer ID certificate and notarization — see
+[docs/Desktop-App.md](docs/Desktop-App.md).
 
 ---
 

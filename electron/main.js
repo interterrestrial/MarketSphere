@@ -144,7 +144,10 @@ function createWindow() {
   // warning invisible to the user, which is exactly the wrong trade for an app
   // that carries marketplace sessions.
   mainWindow.webContents.session.setCertificateVerifyProc((request, callback) => {
-    callback(request.errorCode === 0);
+    // Electron's callback takes Chromium's numeric net error code: 0 accepts
+    // the certificate and -2 rejects it. Passing a boolean causes a native
+    // argument-conversion exception in packaged builds.
+    callback(request.errorCode === 0 ? 0 : -2);
   });
 
   mainWindow.on("closed", () => {

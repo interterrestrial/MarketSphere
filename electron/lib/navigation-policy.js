@@ -21,7 +21,7 @@
 "use strict";
 
 /** Deployed web application. Overridden at build time / by MARKETSPHERE_APP_URL. */
-const DEFAULT_APP_URL = "https://marketsphere.vercel.app";
+const DEFAULT_APP_URL = "https://market-sphere-one.vercel.app";
 
 /** Origin used by `npm run electron:dev`, where the web app runs locally. */
 const DEV_APP_URL = "http://localhost:3000";
@@ -52,7 +52,7 @@ function appOrigin(configured) {
  * True when `candidate` is the application itself.
  *
  * Compared as a parsed origin rather than by string prefix: a prefix check
- * would accept `https://marketsphere.vercel.app.evil.example`, which is a
+ * would accept `https://market-sphere-one.vercel.app.evil.example`, which is a
  * complete look-alike domain.
  */
 function isAppUrl(candidate, origin) {

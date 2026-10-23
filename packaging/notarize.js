@@ -1,11 +1,8 @@
 /**
  * macOS notarization hook for electron-builder.
  *
- * Runs after signing. Without Apple credentials there is nothing to submit, so
- * the step is skipped loudly rather than failing the build — an unsigned local
- * .dmg is still useful for testing, while a release build should never ship
- * unsigned by accident. Set CI=true (or provide the variables) to make a
- * missing credential an error instead.
+ * This file is retained as a reference for a future Apple-signed release.
+ * The student/demo build intentionally disables this hook in package.json.
  *
  * Required for notarization:
  *   APPLE_ID            Apple account email

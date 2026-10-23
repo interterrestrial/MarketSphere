@@ -13,7 +13,7 @@ const { DEFAULT_APP_URL, DEV_APP_URL, appOrigin, isAppUrl, isBlockedUrl, sanitiz
  */
 describe("application origin", () => {
   it("defaults to the deployed web app and the local dev server", () => {
-    expect(appOrigin(DEFAULT_APP_URL)).toBe("https://marketsphere.vercel.app");
+    expect(appOrigin(DEFAULT_APP_URL)).toBe("https://market-sphere-one.vercel.app");
     expect(appOrigin(DEV_APP_URL)).toBe("http://localhost:3000");
   });
 
@@ -30,7 +30,7 @@ describe("application origin", () => {
 });
 
 describe("isAppUrl", () => {
-  const origin = "https://marketsphere.vercel.app";
+  const origin = "https://market-sphere-one.vercel.app";
 
   it("accepts the application itself", () => {
     expect(isAppUrl(origin, origin)).toBe(true);
@@ -41,14 +41,14 @@ describe("isAppUrl", () => {
 
   it("rejects a look-alike host that merely starts with the app origin", () => {
     // A prefix comparison would let all of these through.
-    expect(isAppUrl("https://marketsphere.vercel.app.evil.example", origin)).toBe(false);
-    expect(isAppUrl("https://evil-marketsphere.vercel.app", origin)).toBe(false);
-    expect(isAppUrl("https://marketsphereXvercelYapp", origin)).toBe(false);
+    expect(isAppUrl("https://market-sphere-one.vercel.app.evil.example", origin)).toBe(false);
+    expect(isAppUrl("https://evil-market-sphere-one.vercel.app", origin)).toBe(false);
+    expect(isAppUrl("https://market-sphere-oneXvercelYapp", origin)).toBe(false);
   });
 
   it("rejects a different scheme, port or host", () => {
-    expect(isAppUrl("http://marketsphere.vercel.app", origin)).toBe(false);
-    expect(isAppUrl("https://marketsphere.vercel.app:8443", origin)).toBe(false);
+    expect(isAppUrl("http://market-sphere-one.vercel.app", origin)).toBe(false);
+    expect(isAppUrl("https://market-sphere-one.vercel.app:8443", origin)).toBe(false);
     expect(isAppUrl("https://localhost:3000", origin)).toBe(false);
   });
 

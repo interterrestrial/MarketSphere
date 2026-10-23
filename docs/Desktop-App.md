@@ -14,7 +14,7 @@ origin a browser would, and the session cookie behaves identically — a user
 signs in once on the web and the desktop app is already authenticated.
 
 ```
-┌──────────────────────┐        https://marketsphere.vercel.app
+┌──────────────────────┐        https://market-sphere-one.vercel.app
 │  MarketSphere.app    │  ─────────────────────────────►  Vercel / Next.js
 │  (Electron shell)    │                                    │
 │                      │                                    ▼
@@ -67,7 +67,7 @@ Electron imports and is unit-tested directly:
 
 - **Only the app origin may render.** Compared as a *parsed origin*, never a
   string prefix — a prefix check would accept
-  `https://marketsphere.vercel.app.evil.example`.
+  `https://market-sphere-one.vercel.app.evil.example`.
 - **Everything else opens in the system browser.** The app never navigates
   away from the marketplace.
 - **Non-web schemes are refused outright.** `javascript:`, `data:`, `file:`,
@@ -188,8 +188,23 @@ script cannot drift away from what is meant to ship.
 
 ## 6. Signing and notarization
 
-**Current builds are ad-hoc signed and are not distributable.** macOS will
-refuse to open them for anyone else. A release build needs:
+**The college/demo build is intentionally unsigned.** It does not require an
+Apple Developer account. macOS may block the first launch because the DMG was
+downloaded from the internet; this is expected for any unsigned app:
+
+1. Drag `MarketSphere.app` to `Applications`.
+2. In Finder, Control-click (or right-click) the app and choose **Open**.
+3. Confirm **Open** in the dialog. Future launches work normally.
+
+Do not remove Gatekeeper globally with `xattr -dr` or by changing system
+security settings. The one-time Finder approval is the safe path for a college
+submission.
+
+The build configuration sets `mac.identity` to `null`, so electron-builder
+does not create an ad-hoc signature. It also disables hardened runtime and
+notarization because those are useful only with a real Apple signing identity.
+
+A public release with no first-launch warning needs:
 
 | Variable | Purpose |
 | :--- | :--- |
@@ -231,8 +246,8 @@ showing a blank window.
 
 ## 8. Known limitations
 
-- **Unsigned.** Every build so far is ad-hoc signed. No release is distributable
-  until a Developer ID certificate exists.
+- **Unsigned demo build.** The first launch on another Mac requires the Finder
+  right-click → **Open** approval described above.
 - **Online only.** No offline mode, no local caching, no background sync.
 - **No auto-update.** `.dmg` builds are manual downloads. `electron-updater`
   and a release feed are the obvious next step.

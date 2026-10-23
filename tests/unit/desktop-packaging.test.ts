@@ -155,24 +155,24 @@ describe("renderer isolation", () => {
     // Ignoring certificate errors would hide MITM attempts from the user.
     expect(mainSource).toMatch(/setCertificateVerifyProc/);
     expect(mainSource).not.toMatch(/certificate-error.*ignoreCertificateErrors:\s*true/);
+    expect(mainSource).toMatch(/callback\(request\.errorCode === 0 \? 0 : -2\)/);
   });
 });
 
 describe("macOS packaging", () => {
-  it("produces a dmg and enforces the hardened runtime", () => {
+  it("produces an unsigned demo dmg", () => {
     const mac = build.mac;
     const targets = mac.target.map((entry) => entry.target);
     expect(targets).toContain("dmg");
-    expect(mac.hardenedRuntime).toBe(true);
+    expect(mac.identity).toBeNull();
+    expect(mac.hardenedRuntime).toBe(false);
     expect(mac.gatekeeperAssess).toBe(false);
     expect(mac.category).toBe("public.app-category.business");
   });
 
-  it("ships entitlements and a notarization hook", () => {
-    expect(build.mac.entitlements).toBe("packaging/entitlements.mac.plist");
-    expect(build.mac.entitlementsInherit).toBe("packaging/entitlements.mac.plist");
-    // A root-level hook: electron-builder rejects it under `mac`.
-    expect(build.afterSign).toBe("packaging/notarize.js");
+  it("does not invoke signing or notarization for the demo build", () => {
+    expect(build.mac.notarize).toBe(false);
+    expect(build.afterSign).toBeUndefined();
   });
 
   it("requests no entitlement beyond network access and JIT", () => {
@@ -192,7 +192,7 @@ describe("macOS packaging", () => {
 
   it("points at the deployed web app rather than localhost", () => {
     const policy = read("electron/lib/navigation-policy.js");
-    expect(policy).toContain("https://marketsphere.vercel.app");
+    expect(policy).toContain("https://market-sphere-one.vercel.app");
     expect(policy).toContain("http://localhost:3000");
   });
 });

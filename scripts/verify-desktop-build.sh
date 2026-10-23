@@ -159,11 +159,9 @@ elif echo "$SIGN_INFO" | grep -q "Signature=adhoc"; then
   # electron-builder falls back to an ad-hoc signature when no identity is
   # available. The app runs locally, but macOS will refuse to open it for
   # anyone else, and it carries none of the hardened-runtime guarantees.
-  echo "  ! ad-hoc signature — runnable on this machine only, NOT distributable."
-  echo "    For a release build set CSC_LINK (Developer ID certificate) and"
-  echo "    APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID for notarization."
+  echo "  ! ad-hoc signature — demo distribution; Gatekeeper approval is required."
 else
-  echo "  ! unsigned build — fine for local testing, NOT distributable."
+  echo "  ! unsigned build — demo distribution; Gatekeeper approval is required on first launch."
 fi
 
 echo
